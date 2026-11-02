@@ -132,7 +132,7 @@ function onProgress(seconds: number): void {
                         >
                         <span
                             v-if="progress.completed"
-                            class="flex items-center gap-1 text-sm font-medium text-emerald-600"
+                            class="flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400"
                             data-test="completed-badge"
                             ><CircleCheck class="size-4" /> Completed</span
                         >
@@ -169,12 +169,12 @@ function onProgress(seconds: number): void {
                         <p class="text-lg font-semibold">{{ access.reason }}</p>
                         <p
                             v-if="access.requiresAccount"
-                            class="text-sm text-muted-foreground"
+                            class="text-sm text-foreground/80"
                         >
                             Registration is free and gives you access to every
                             free lesson.
                         </p>
-                        <p v-else class="text-sm text-muted-foreground">
+                        <p v-else class="text-sm text-foreground/80">
                             Premium members get every lesson, worksheet and
                             quiz.
                         </p>
@@ -247,16 +247,16 @@ function onProgress(seconds: number): void {
                                 </Link>
                             </dd>
                         </div>
-                        <div
-                            v-if="lesson.published_at"
-                            class="col-span-2 text-xs text-muted-foreground"
-                        >
-                            Published {{ formatDate(lesson.published_at)
-                            }}<span v-if="lesson.author">
-                                by {{ lesson.author }}</span
-                            >
-                        </div>
                     </dl>
+                    <p
+                        v-if="lesson.published_at"
+                        class="text-xs text-muted-foreground"
+                    >
+                        Published {{ formatDate(lesson.published_at)
+                        }}<span v-if="lesson.author">
+                            by {{ lesson.author }}</span
+                        >
+                    </p>
 
                     <div v-if="user" class="grid gap-2">
                         <Button

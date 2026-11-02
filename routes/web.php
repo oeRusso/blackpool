@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Learning\CatalogController;
 use App\Http\Controllers\Learning\DashboardController;
 use App\Http\Controllers\Learning\LessonController;
@@ -7,7 +8,7 @@ use App\Http\Controllers\Learning\ProgressController;
 use App\Http\Controllers\VideoStreamController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 Route::get('lessons', CatalogController::class)->name('lessons.index');
 Route::get('lessons/{lesson:slug}', [LessonController::class, 'show'])->name('lessons.show');

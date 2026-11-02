@@ -265,8 +265,8 @@ const tiles = computed(() => [
                                     class="shrink-0 tabular-nums"
                                     :class="
                                         attempt.percentage >= 70
-                                            ? 'text-emerald-600'
-                                            : 'text-amber-600'
+                                            ? 'text-emerald-700 dark:text-emerald-400'
+                                            : 'text-amber-700 dark:text-amber-400'
                                     "
                                     >{{ attempt.score }}/{{
                                         attempt.total
@@ -290,7 +290,7 @@ const tiles = computed(() => [
                             ><Sparkles class="size-5" /> Go premium</CardTitle
                         ></CardHeader
                     >
-                    <CardContent class="text-sm text-muted-foreground">
+                    <CardContent class="text-sm text-foreground/80">
                         Premium unlocks every lesson, worksheet and quiz. In
                         this demo, an administrator grants premium access from
                         the Users page.

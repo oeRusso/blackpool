@@ -4,6 +4,7 @@ import {
     BookOpen,
     FolderTree,
     LayoutGrid,
+    Library,
     ShieldCheck,
     SquareChartGantt,
     Users,
@@ -22,6 +23,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as catalog } from '@/routes/lessons';
 import { dashboard as adminDashboard } from '@/routes/admin';
 import { index as categoriesIndex } from '@/routes/admin/categories';
 import { index as lessonsIndex } from '@/routes/admin/lessons';
@@ -34,9 +36,14 @@ const can = computed(() => page.props.auth.can);
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'My learning',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Browse lessons',
+        href: catalog(),
+        icon: Library,
     },
 ];
 

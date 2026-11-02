@@ -49,6 +49,6 @@ for _ in $(seq 1 60); do
   sleep 0.5
 done
 
-docker run --rm --ipc=host --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e CI="${CI:-}" \
+docker run --rm --ipc=host --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e CI="${CI:-}" -e SCREENSHOTS="${SCREENSHOTS:-}" \
   -v "$PWD":/work -w /work "mcr.microsoft.com/playwright:v${PW_VERSION}-noble" \
   npx playwright test "$@"

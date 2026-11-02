@@ -16,7 +16,7 @@ test.describe('students', () => {
         await page.goto('/dashboard');
         const sidebar = page.locator('[data-sidebar="sidebar"]');
         await expect(
-            sidebar.getByRole('link', { name: 'Dashboard' }),
+            sidebar.getByRole('link', { name: 'My learning' }),
         ).toBeVisible();
         await expect(
             sidebar.getByRole('link', { name: 'Categories' }),
@@ -61,7 +61,7 @@ test.describe('editors', () => {
         await page.goto('/admin');
         const sidebar = page.locator('[data-sidebar="sidebar"]');
         await expect(
-            sidebar.getByRole('link', { name: 'Lessons' }),
+            sidebar.getByRole('link', { name: 'Lessons', exact: true }),
         ).toBeVisible();
         await expect(
             sidebar.getByRole('link', { name: 'Categories' }),

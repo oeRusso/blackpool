@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Public source code link shown in the footer (portfolio).
+    'repository_url' => env('APP_REPOSITORY_URL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

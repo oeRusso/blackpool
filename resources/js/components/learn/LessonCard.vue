@@ -1,12 +1,24 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { CircleCheck, Clock, Lock, PlayCircle } from '@lucide/vue';
+import { computed } from 'vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LevelBadge from '@/components/learn/LevelBadge.vue';
 import { formatDuration } from '@/lib/format';
 import { show } from '@/routes/lessons';
 import type { LessonCard } from '@/types';
 
-defineProps<{ lesson: LessonCard; locked?: boolean }>();
+const props = defineProps<{ lesson: LessonCard; locked?: boolean }>();
+
+// Lessons without a cover get a gradient in their CEFR band colour.
+const placeholderTone = computed(
+    () =>
+        ({
+            A: 'from-emerald-500 to-teal-700',
+            B: 'from-sky-500 to-blue-800',
+            C: 'from-violet-500 to-indigo-800',
+        })[props.lesson.level[0]] ?? 'from-slate-500 to-slate-800',
+);
 </script>
 
 <template>
@@ -25,11 +37,16 @@ defineProps<{ lesson: LessonCard; locked?: boolean }>();
             />
             <div
                 v-else
-                class="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"
+                class="relative flex size-full items-end overflow-hidden bg-gradient-to-br p-4"
+                :class="placeholderTone"
             >
-                <span class="text-4xl font-black text-primary/30">{{
-                    lesson.level
-                }}</span>
+                <AppLogoIcon
+                    class="absolute -top-6 -right-6 size-40 text-white/15"
+                />
+                <span
+                    class="text-5xl font-black tracking-tight text-white/90 drop-shadow-sm"
+                    >{{ lesson.level }}</span
+                >
             </div>
             <div class="absolute top-2 left-2 flex gap-1">
                 <LevelBadge :code="lesson.level" />

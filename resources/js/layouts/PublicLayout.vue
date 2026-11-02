@@ -107,10 +107,12 @@ const year = new Date().getFullYear();
                         >Lessons</Link
                     >
                     <a
-                        href="https://github.com/"
+                        v-if="page.props.repositoryUrl"
+                        :href="String(page.props.repositoryUrl)"
                         class="hover:text-foreground"
                         rel="noopener"
-                        >GitHub</a
+                        target="_blank"
+                        >Source code</a
                     >
                 </nav>
             </div>
