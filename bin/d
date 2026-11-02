@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Run a command inside the PHP/Node dev container, e.g. `bin/d php artisan test`.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+TTY_FLAGS=""
+[ -t 0 ] && [ -t 1 ] && TTY_FLAGS="-it"
+exec docker run --rm $TTY_FLAGS -u "$(id -u):$(id -g)" \
+  -e HOME=/tmp -e COMPOSER_HOME=/tmp/composer \
+  -v "$PWD":/app -v blackpool-composer-cache:/tmp/composer -v blackpool-npm-cache:/tmp/.npm \
+  -w /app --network host blackpool-dev "$@"
