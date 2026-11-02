@@ -2,8 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\PermissionName;
+use App\Models\Category;
+use App\Models\Lesson;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\Permission\Models\Role;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,10 +43,39 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'auth' => [
-                'user' => $request->user(),
-            ],
+            'auth' => fn (): array => $this->auth($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * The authenticated user plus a map of UI abilities computed on the server.
+     * The UI only uses it to show or hide controls; every endpoint authorizes again.
+     *
+     * @return array<string, mixed>
+     */
+    protected function auth(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return ['user' => null, 'roles' => [], 'can' => (object) []];
+        }
+
+        $can = [
+            'accessAdmin' => $user->can('access-admin'),
+            'manageCategories' => $user->can('viewAny', Category::class),
+            'manageLessons' => $user->can('viewAny', Lesson::class),
+            'publishLessons' => $user->can(PermissionName::PublishLessons->value),
+            'manageUsers' => $user->can('viewAny', User::class),
+            'manageRoles' => $user->can('viewAny', Role::class),
+            'viewPremiumLessons' => $user->can(PermissionName::ViewPremiumLessons->value),
+        ];
+
+        return [
+            'user' => $user->withoutRelations(),
+            'roles' => $user->getRoleNames(),
+            'can' => $can,
         ];
     }
 }

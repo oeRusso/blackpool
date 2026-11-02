@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\RoleName;
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +18,8 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => test()->seed(RolesAndPermissionsSeeder::class))
     ->in('Feature');
 
 /*
@@ -47,4 +51,12 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Create a verified user with the given role.
+ */
+function userWithRole(RoleName $role): User
+{
+    return User::factory()->create()->assignRole($role->value);
 }

@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookOpen,
+    FolderTree,
+    LayoutGrid,
+    ShieldCheck,
+    SquareChartGantt,
+    Users,
+} from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -15,7 +22,15 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { dashboard as adminDashboard } from '@/routes/admin';
+import { index as categoriesIndex } from '@/routes/admin/categories';
+import { index as lessonsIndex } from '@/routes/admin/lessons';
+import { index as rolesIndex } from '@/routes/admin/roles';
+import { index as usersIndex } from '@/routes/admin/users';
 import type { NavItem } from '@/types';
+
+const page = usePage();
+const can = computed(() => page.props.auth.can);
 
 const mainNavItems: NavItem[] = [
     {
@@ -25,18 +40,36 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const adminNavItems = computed<NavItem[]>(() => {
+    const items: [boolean, NavItem][] = [
+        [
+            can.value.accessAdmin,
+            {
+                title: 'Overview',
+                href: adminDashboard(),
+                icon: SquareChartGantt,
+            },
+        ],
+        [
+            can.value.manageLessons,
+            { title: 'Lessons', href: lessonsIndex(), icon: BookOpen },
+        ],
+        [
+            can.value.manageCategories,
+            { title: 'Categories', href: categoriesIndex(), icon: FolderTree },
+        ],
+        [
+            can.value.manageUsers,
+            { title: 'Users', href: usersIndex(), icon: Users },
+        ],
+        [
+            can.value.manageRoles,
+            { title: 'Roles', href: rolesIndex(), icon: ShieldCheck },
+        ],
+    ];
+
+    return items.filter(([allowed]) => allowed).map(([, item]) => item);
+});
 </script>
 
 <template>
@@ -54,11 +87,15 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" label="Learning" />
+            <NavMain
+                v-if="adminNavItems.length > 0"
+                :items="adminNavItems"
+                label="Admin"
+            />
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

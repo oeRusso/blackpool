@@ -4,19 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-BlackPool is an English-learning platform (CEFR levels A1–C2) built as a portfolio project. It is being refactored according to the phased plan in `docs/ROADMAP.md`. **Read it before making structural changes.** The current code is the *legacy baseline* (git tag `legacy-baseline`).
+BlackPool is an English-learning platform (CEFR levels A1–C2) built as a portfolio project. It is being refactored according to the phased plan in `docs/ROADMAP.md`. **Read it before making structural changes.** The current code is the _legacy baseline_ (git tag `legacy-baseline`).
 
 Constraint: only free / open-source tools and services. Target deployment is a Contabo VPS behind Cloudflare (free plan, so request bodies are capped at 100 MB and large uploads must be chunked).
 
 ## Stack (current → target)
 
-| Layer | Current (legacy) | Target (Phase 1) |
-|---|---|---|
-| Backend | Laravel 11, Jetstream 5 (Fortify), Sanctum | Laravel 13 + Vue starter kit (Fortify) |
+| Layer    | Current (legacy)                                             | Target (Phase 1)                            |
+| -------- | ------------------------------------------------------------ | ------------------------------------------- |
+| Backend  | Laravel 11, Jetstream 5 (Fortify), Sanctum                   | Laravel 13 + Vue starter kit (Fortify)      |
 | Frontend | Inertia 1, Vue 3.5 (JS, Options+`<script setup>` mix), Ziggy | Inertia 3, Vue 3.5 + TypeScript, shadcn-vue |
-| CSS | Tailwind 3 | Tailwind 4 |
-| AuthZ | spatie/laravel-permission 6 | same + Policies |
-| Tests | PHPUnit 11 (Jetstream defaults only) | Pest 4, Larastan, Vitest, Playwright |
+| CSS      | Tailwind 3                                                   | Tailwind 4                                  |
+| AuthZ    | spatie/laravel-permission 6                                  | same + Policies                             |
+| Tests    | PHPUnit 11 (Jetstream defaults only)                         | Pest 4, Larastan, Vitest, Playwright        |
 
 ## Commands
 

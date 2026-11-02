@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Run the Playwright end-to-end suite against a freshly seeded copy of the app.
+#   bin/e2e                 # all specs
+#   bin/e2e e2e/admin.spec.ts --grep "categories"
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+PORT="${E2E_PORT:-8010}"
+SERVER="blackpool-e2e-server"
+PW_VERSION="$(node -p "require('./node_modules/@playwright/test/package.json').version")"
+
+cleanup() { docker rm -f "$SERVER" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+cleanup
+
+# Dedicated environment so the dev database is never touched.
+if [ ! -f .env.e2e ]; then
+  cp .env.example .env.e2e
+  sed -i "s#^APP_URL=.*#APP_URL=http://127.0.0.1:${PORT}#" .env.e2e
+  sed -i "s#^DB_CONNECTION=.*#DB_CONNECTION=sqlite\nDB_DATABASE=/data/e2e.sqlite#" .env.e2e
+  sed -i "s#^MAIL_MAILER=.*#MAIL_MAILER=log#" .env.e2e
+  bin/d php artisan key:generate --env=e2e --force -q
+fi
+
+[ "${E2E_SKIP_BUILD:-0}" = "1" ] || bin/d npm run build >/dev/null
+
+docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
+  -v "$PWD":/app -v blackpool-data:/data -w /app blackpool-dev \
+  sh -c 'touch /data/e2e.sqlite && php artisan migrate:fresh --seed --force -q && php artisan storage:link -q 2>/dev/null || true'
+
+docker run -d --name "$SERVER" -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
+  -e PHP_CLI_SERVER_WORKERS=4 \
+  -v "$PWD":/app -v blackpool-data:/data -w /app --network host blackpool-dev \
+  php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload >/dev/null
+
+for _ in $(seq 1 60); do
+  curl -fs "http://127.0.0.1:${PORT}/up" >/dev/null && break
+  sleep 0.5
+done
+
+docker run --rm --ipc=host --network host -u "$(id -u):$(id -g)" -e HOME=/tmp -e CI="${CI:-}" \
+  -v "$PWD":/work -w /work "mcr.microsoft.com/playwright:v${PW_VERSION}-noble" \
+  npx playwright test "$@"

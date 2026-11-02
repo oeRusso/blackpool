@@ -10,8 +10,20 @@ export type User = {
     [key: string]: unknown;
 };
 
+export type Abilities = {
+    accessAdmin: boolean;
+    manageCategories: boolean;
+    manageLessons: boolean;
+    publishLessons: boolean;
+    manageUsers: boolean;
+    manageRoles: boolean;
+    viewPremiumLessons: boolean;
+};
+
 export type Auth = {
     user: User;
+    roles: string[];
+    can: Abilities;
 };
 
 export type Passkey = {
