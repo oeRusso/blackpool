@@ -46,3 +46,4 @@ yarn-error.log
 /e2e-results
 /e2e/.auth
 /e2e/fixtures/sample.mp4
+/.env.prodtest

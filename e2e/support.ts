@@ -34,3 +34,18 @@ export async function expectToast(
         page.locator('[data-sonner-toast]').filter({ hasText: text }).first(),
     ).toBeVisible();
 }
+
+/** Collects Content-Security-Policy violations reported by the browser. */
+export function trackCspViolations(page: Page): string[] {
+    const violations: string[] = [];
+    page.on('console', (message) => {
+        if (
+            message.type() === 'error' &&
+            /Content Security Policy/i.test(message.text())
+        ) {
+            violations.push(message.text());
+        }
+    });
+
+    return violations;
+}

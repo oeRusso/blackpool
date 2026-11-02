@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\PermissionName;
+use App\Enums\RoleName;
 use App\Models\User;
 use App\Policies\RolePolicy;
 use Carbon\CarbonImmutable;
@@ -41,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
 
         Gate::define('access-admin', fn (User $user): bool => $user->can(PermissionName::AccessAdmin->value));
+
+        // Laravel Pulse dashboard (/pulse) is restricted to administrators.
+        Gate::define('viewPulse', fn (User $user): bool => $user->hasRole(RoleName::Admin->value));
     }
 
     /**

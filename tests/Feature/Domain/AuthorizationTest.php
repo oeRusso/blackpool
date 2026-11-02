@@ -84,3 +84,20 @@ it('keeps levels from being deleted while they have lessons', function () {
 
     expect(fn () => $level->delete())->toThrow(QueryException::class);
 });
+
+it('sends security headers and a nonce-based CSP', function () {
+    config(['security.csp.enabled' => true]);
+
+    $response = $this->get(route('home'));
+
+    $response->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+        ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+    $csp = $response->headers->get('Content-Security-Policy');
+    expect($csp)->toContain("script-src 'self' 'nonce-")
+        ->toContain('frame-src https://www.youtube-nocookie.com https://player.vimeo.com')
+        ->toContain("object-src 'none'");
+
+    preg_match("/'nonce-([^']+)'/", $csp, $matches);
+    expect($response->getContent())->toContain('nonce="'.$matches[1].'"');
+});

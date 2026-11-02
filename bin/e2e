@@ -10,6 +10,14 @@ SERVER="blackpool-e2e-server"
 WORKER="blackpool-e2e-worker"
 PW_VERSION="$(node -p "require('./node_modules/@playwright/test/package.json').version")"
 
+# E2E_BASE_URL=http://host:port runs the suite against an already running stack
+# (e.g. the production compose stack) instead of booting the dev server.
+if [ -n "${E2E_BASE_URL:-}" ]; then
+  exec docker run --rm --ipc=host --network host -u "$(id -u):$(id -g)" -e HOME=/tmp \
+    -e E2E_BASE_URL -e CI="${CI:-}" -v "$PWD":/work -w /work \
+    "mcr.microsoft.com/playwright:v${PW_VERSION}-noble" npx playwright test "$@"
+fi
+
 cleanup() { docker rm -f "$SERVER" "$WORKER" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 cleanup

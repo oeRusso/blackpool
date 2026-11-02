@@ -8,6 +8,7 @@ use App\Models\Lesson;
 use App\Models\Level;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class LessonSeeder extends Seeder
 {
@@ -70,7 +71,7 @@ class LessonSeeder extends Seeder
             $level = Level::where('code', $code)->firstOrFail();
 
             foreach ($lessons as $position => [$title, $summary, $categoryNames, $isFree]) {
-                $lesson = Lesson::create([
+                $lesson = Lesson::withTrashed()->updateOrCreate(['slug' => Str::slug($title)], [
                     'level_id' => $level->id,
                     'author_id' => $author?->id,
                     'title' => $title,
@@ -83,12 +84,16 @@ class LessonSeeder extends Seeder
                     'is_free' => $isFree,
                 ]);
 
+                if ($lesson->trashed()) {
+                    $lesson->restore();
+                }
+
                 $lesson->categories()->sync($categories->only($categoryNames)->values());
             }
         }
 
         // One draft so editors can see the workflow.
-        Lesson::create([
+        Lesson::withTrashed()->updateOrCreate(['slug' => 'reported-speech-draft'], [
             'level_id' => Level::where('code', 'B1')->value('id'),
             'author_id' => $author?->id,
             'title' => 'Reported speech (draft)',

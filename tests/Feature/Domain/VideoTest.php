@@ -230,3 +230,11 @@ it('prunes abandoned chunk folders', function () {
     Storage::disk('local')->assertMissing('video-chunks/old/0.part');
     Storage::disk('local')->assertExists('video-chunks/fresh/0.part');
 });
+
+it('never lets the queue retry a transcode that is still running', function (string $connection) {
+    // retry_after must exceed the job timeout, otherwise a second worker would pick
+    // up a long ffmpeg job while the first one is still processing it.
+    $timeout = (new ProcessUploadedVideo(new Video))->timeout;
+
+    expect(config("queue.connections.{$connection}.retry_after"))->toBeGreaterThan($timeout);
+})->with(['database', 'redis']);

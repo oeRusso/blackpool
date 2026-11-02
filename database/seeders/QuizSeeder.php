@@ -39,7 +39,7 @@ class QuizSeeder extends Seeder
         foreach (self::QUIZZES as $slug => $questions) {
             $lesson = Lesson::where('slug', $slug)->first();
 
-            if ($lesson === null) {
+            if ($lesson === null || $lesson->questions()->exists()) {
                 continue;
             }
 

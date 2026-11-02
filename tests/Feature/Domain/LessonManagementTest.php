@@ -7,7 +7,9 @@ use App\Models\Category;
 use App\Models\Lesson;
 use App\Models\Level;
 use App\Models\Question;
+use App\Models\User;
 use App\Models\Video;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -129,4 +131,13 @@ it('renders the edit page with its video, quiz and upload limits', function () {
             ->has('uploadLimits.extensions')
             ->has('levels')
             ->has('categories'));
+});
+
+it('can run the demo seeders twice without duplicating content', function () {
+    $this->seed(DatabaseSeeder::class);
+    $this->seed(DatabaseSeeder::class);
+
+    expect(Lesson::count())->toBe(31)
+        ->and(Question::count())->toBe(11)
+        ->and(User::count())->toBe(4);
 });

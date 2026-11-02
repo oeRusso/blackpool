@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1.7
+# Production image for BlackPool: PHP-FPM 8.4 + ffmpeg, built assets and an
+# Nginx image that serves /public and streams protected media.
+
+FROM php:8.4-fpm-bookworm AS base
+COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg default-mysql-client unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && install-php-extensions intl zip gd exif bcmath pcntl pdo_mysql redis opcache
+COPY docker/production/php.ini /usr/local/etc/php/conf.d/zz-blackpool.ini
+COPY docker/production/php-fpm.conf /usr/local/etc/php-fpm.d/zz-blackpool.conf
+WORKDIR /var/www/html
+
+# ---- Composer dependencies ------------------------------------------------
+FROM base AS vendor
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts --no-autoloader --no-progress
+
+# ---- Front-end build (Wayfinder needs PHP, Vite needs Node) ---------------
+FROM vendor AS assets
+COPY --from=node:24-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24-bookworm-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+RUN composer dump-autoload --no-dev --no-interaction \
+    && cp .env.example .env && php artisan key:generate --force \
+    && npm run build \
+    && rm .env
+
+# ---- Application (php-fpm, queue worker and scheduler) -------------------
+FROM base AS app
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY . .
+COPY --from=vendor /var/www/html/vendor ./vendor
+COPY --from=assets /var/www/html/public/build ./public/build
+RUN composer dump-autoload --no-dev --optimize --classmap-authoritative --no-interaction \
+    && mkdir -p storage/app/public storage/app/private storage/app/media storage/framework/{cache/data,sessions,views} storage/logs \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && rm -f /usr/local/bin/composer
+COPY --chmod=755 docker/production/entrypoint.sh /usr/local/bin/entrypoint
+USER www-data
+ENTRYPOINT ["entrypoint"]
+CMD ["php-fpm"]
+
+# ---- Nginx -----------------------------------------------------------------
+FROM nginx:1.27-alpine AS web
+COPY --from=app /var/www/html/public /var/www/html/public
+COPY docker/production/nginx/cloudflare.conf /etc/nginx/snippets/cloudflare.conf
+COPY docker/production/nginx/app.conf /etc/nginx/snippets/app.conf
+COPY docker/production/nginx/default.conf /etc/nginx/conf.d/default.conf
+RUN ln -s /var/www/html/storage/app/public /var/www/html/public/storage
