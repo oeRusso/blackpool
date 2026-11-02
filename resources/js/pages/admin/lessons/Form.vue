@@ -3,6 +3,7 @@ import { Form, Head, usePage } from '@inertiajs/vue3';
 import { FileText, ImageUp } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import LessonController from '@/actions/App/Http/Controllers/Admin/LessonController';
+import LessonVideoManager from '@/components/admin/LessonVideoManager.vue';
 import PageHeader from '@/components/admin/PageHeader.vue';
 import InputError from '@/components/InputError.vue';
 import NativeSelect from '@/components/NativeSelect.vue';
@@ -13,13 +14,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index } from '@/routes/admin/lessons';
-import type { AdminLesson, Level, Option } from '@/types';
+import type { AdminLesson, LessonVideo, Level, Option } from '@/types';
 
 const props = defineProps<{
     lesson?: AdminLesson;
     levels: Level[];
     categories: { id: number; name: string }[];
     statuses: Option[];
+    video?: LessonVideo | null;
+    uploadLimits?: { max_size: number; extensions: string[] };
 }>();
 
 defineOptions({
@@ -66,7 +69,7 @@ const formAttributes = computed(() =>
 
     <Form
         v-bind="formAttributes"
-        class="flex flex-1 flex-col gap-6 p-4 md:p-6"
+        class="flex flex-col gap-6 p-4 md:p-6"
         v-slot="{ errors, processing, progress }"
     >
         <PageHeader
@@ -347,4 +350,15 @@ const formAttributes = computed(() =>
             </div>
         </div>
     </Form>
+
+    <section v-if="lesson && uploadLimits" class="px-4 pb-6 md:px-6">
+        <LessonVideoManager
+            :lesson-id="lesson.id"
+            :video="video ?? null"
+            :limits="uploadLimits"
+        />
+    </section>
+    <p v-else class="px-4 pb-6 text-sm text-muted-foreground md:px-6">
+        Save the lesson first to attach a video.
+    </p>
 </template>

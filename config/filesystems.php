@@ -47,6 +47,15 @@ return [
             'report' => false,
         ],
 
+        // Private storage for uploaded and transcoded lesson videos (HLS).
+        'media' => [
+            'driver' => 'local',
+            'root' => env('MEDIA_ROOT', storage_path('app/media')),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

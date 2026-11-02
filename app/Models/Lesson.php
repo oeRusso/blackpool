@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $deleted_at
  * @property-read Level $level
  * @property-read User|null $author
+ * @property-read Video|null $video
  */
 #[Fillable([
     'level_id', 'author_id', 'title', 'slug', 'summary', 'body', 'status',
@@ -105,6 +107,14 @@ class Lesson extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    /**
+     * @return HasOne<Video, $this>
+     */
+    public function video(): HasOne
+    {
+        return $this->hasOne(Video::class);
     }
 
     /**

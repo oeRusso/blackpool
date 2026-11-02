@@ -7,9 +7,10 @@ cd "$(dirname "$0")/.."
 
 PORT="${E2E_PORT:-8010}"
 SERVER="blackpool-e2e-server"
+WORKER="blackpool-e2e-worker"
 PW_VERSION="$(node -p "require('./node_modules/@playwright/test/package.json').version")"
 
-cleanup() { docker rm -f "$SERVER" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -f "$SERVER" "$WORKER" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 cleanup
 
@@ -21,17 +22,27 @@ if [ ! -f .env.e2e ]; then
   sed -i "s#^MAIL_MAILER=.*#MAIL_MAILER=log#" .env.e2e
   bin/d php artisan key:generate --env=e2e --force -q
 fi
+grep -q '^MEDIA_CHUNK_SIZE=' .env.e2e || echo 'MEDIA_CHUNK_SIZE=1048576' >> .env.e2e
+grep -q '^MEDIA_ROOT=' .env.e2e || echo 'MEDIA_ROOT=/data/e2e-media' >> .env.e2e
+
+# Small sample video used by the upload spec (generated once with ffmpeg).
+[ -f e2e/fixtures/sample.mp4 ] || bin/d ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=duration=6:size=1280x720:rate=25 \
+  -f lavfi -i sine=frequency=440:duration=6 -shortest -c:v libx264 -b:v 3M -c:a aac -y e2e/fixtures/sample.mp4
 
 [ "${E2E_SKIP_BUILD:-0}" = "1" ] || bin/d npm run build >/dev/null
 
 docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
   -v "$PWD":/app -v blackpool-data:/data -w /app blackpool-dev \
-  sh -c 'touch /data/e2e.sqlite && php artisan migrate:fresh --seed --force -q && php artisan storage:link -q 2>/dev/null || true'
+  sh -c 'touch /data/e2e.sqlite && rm -rf /data/e2e-media && php artisan migrate:fresh --seed --force -q && php artisan storage:link -q 2>/dev/null || true'
 
 docker run -d --name "$SERVER" -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
   -e PHP_CLI_SERVER_WORKERS=4 \
   -v "$PWD":/app -v blackpool-data:/data -w /app --network host blackpool-dev \
   php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload >/dev/null
+
+docker run -d --name "$WORKER" -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
+  -v "$PWD":/app -v blackpool-data:/data -w /app --network host blackpool-dev \
+  php artisan queue:work --queue=media,default --tries=2 --timeout=600 >/dev/null
 
 for _ in $(seq 1 60); do
   curl -fs "http://127.0.0.1:${PORT}/up" >/dev/null && break

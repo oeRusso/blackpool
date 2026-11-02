@@ -83,3 +83,22 @@ export type AdminRole = {
     permissions: string[];
     locked: boolean;
 };
+
+export type VideoSource = 'upload' | 'youtube' | 'vimeo';
+export type VideoStatus = 'processing' | 'ready' | 'failed';
+
+export type LessonVideo = {
+    id: number;
+    source: VideoSource;
+    status: VideoStatus;
+    title: string | null;
+    embed_url: string | null;
+    external_url: string | null;
+    playlist_url: string | null;
+    thumbnail_url: string | null;
+    renditions: string[];
+    duration_seconds: number | null;
+    size_bytes: number | null;
+    original_name: string | null;
+    error: string | null;
+};

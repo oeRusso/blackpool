@@ -75,7 +75,7 @@ class LessonController extends Controller
     {
         Gate::authorize('update', $lesson);
 
-        $lesson->load('categories:id');
+        $lesson->load(['categories:id', 'video']);
 
         return Inertia::render('admin/lessons/Form', [
             ...$this->formOptions(),
@@ -93,6 +93,11 @@ class LessonController extends Controller
                 'position' => $lesson->position,
                 'cover_url' => $lesson->coverUrl(),
                 'has_pdf' => $lesson->pdf_path !== null,
+            ],
+            'video' => $lesson->video?->toPlayerArray(),
+            'uploadLimits' => [
+                'max_size' => (int) config('media.uploads.max_size'),
+                'extensions' => config('media.uploads.extensions'),
             ],
         ]);
     }
