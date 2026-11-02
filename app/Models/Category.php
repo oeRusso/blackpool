@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -15,8 +15,8 @@ use Illuminate\Support\Str;
  * @property string $name
  * @property string $slug
  * @property string|null $description
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  */
 #[Fillable(['name', 'slug', 'description'])]
 class Category extends Model

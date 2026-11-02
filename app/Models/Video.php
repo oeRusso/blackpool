@@ -4,12 +4,12 @@ namespace App\Models;
 
 use App\Enums\VideoSource;
 use App\Enums\VideoStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\VideoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -31,9 +31,9 @@ use Illuminate\Support\Facades\Storage;
  * @property int|null $size_bytes
  * @property int|null $duration_seconds
  * @property string|null $error
- * @property Carbon|null $processed_at
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property CarbonInterface|null $processed_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  * @property-read Lesson $lesson
  */
 #[Fillable([

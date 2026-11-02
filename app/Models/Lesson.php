@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\LessonStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\LessonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -11,9 +12,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -26,15 +27,15 @@ use Illuminate\Support\Str;
  * @property string $summary
  * @property string|null $body
  * @property LessonStatus $status
- * @property Carbon|null $published_at
+ * @property CarbonInterface|null $published_at
  * @property int $position
  * @property int|null $duration_seconds
  * @property bool $is_free
  * @property string|null $cover_path
  * @property string|null $pdf_path
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
- * @property Carbon|null $deleted_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $deleted_at
  * @property-read Level $level
  * @property-read User|null $author
  * @property-read Video|null $video
@@ -115,6 +116,22 @@ class Lesson extends Model
     public function video(): HasOne
     {
         return $this->hasOne(Video::class);
+    }
+
+    /**
+     * @return HasMany<Question, $this>
+     */
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<LessonProgress, $this>
+     */
+    public function progress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
     }
 
     /**

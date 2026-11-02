@@ -45,6 +45,22 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Lesson::class, 'author_id');
     }
 
+    /**
+     * @return HasMany<LessonProgress, $this>
+     */
+    public function lessonProgress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
+    }
+
+    /**
+     * @return HasMany<QuizAttempt, $this>
+     */
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
     public function isStaff(): bool
     {
         return $this->can(PermissionName::AccessAdmin->value);

@@ -95,6 +95,12 @@ class LessonController extends Controller
                 'has_pdf' => $lesson->pdf_path !== null,
             ],
             'video' => $lesson->video?->toPlayerArray(),
+            'questions' => $lesson->questions()->with('options')->get()->map(fn ($question) => [
+                'id' => $question->id,
+                'prompt' => $question->prompt,
+                'explanation' => $question->explanation,
+                'options' => $question->options->map->only(['id', 'text', 'is_correct']),
+            ]),
             'uploadLimits' => [
                 'max_size' => (int) config('media.uploads.max_size'),
                 'extensions' => config('media.uploads.extensions'),

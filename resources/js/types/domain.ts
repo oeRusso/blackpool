@@ -102,3 +102,39 @@ export type LessonVideo = {
     original_name: string | null;
     error: string | null;
 };
+
+export type LessonCard = {
+    id: number;
+    slug: string;
+    title: string;
+    summary: string;
+    level: string;
+    categories?: string[];
+    is_free: boolean;
+    duration_seconds: number | null;
+    image_url: string | null;
+    has_video: boolean;
+    completed: boolean;
+    last_position_seconds?: number;
+};
+
+export type QuizQuestion = {
+    id: number;
+    prompt: string;
+    options: { id: number; text: string }[];
+    explanation: string | null;
+    correct_option_id: number | null;
+};
+
+export type Quiz = {
+    passPercentage: number;
+    questions: QuizQuestion[];
+    lastAttempt: {
+        score: number;
+        total: number;
+        percentage: number;
+        passed: boolean;
+        answers: Record<string, number | null>;
+        created_at: string | null;
+    } | null;
+};

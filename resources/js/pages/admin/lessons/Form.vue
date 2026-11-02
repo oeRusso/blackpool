@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue';
 import LessonController from '@/actions/App/Http/Controllers/Admin/LessonController';
 import LessonVideoManager from '@/components/admin/LessonVideoManager.vue';
 import PageHeader from '@/components/admin/PageHeader.vue';
+import QuizEditor from '@/components/admin/QuizEditor.vue';
 import InputError from '@/components/InputError.vue';
 import NativeSelect from '@/components/NativeSelect.vue';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,12 @@ const props = defineProps<{
     statuses: Option[];
     video?: LessonVideo | null;
     uploadLimits?: { max_size: number; extensions: string[] };
+    questions?: {
+        id: number;
+        prompt: string;
+        explanation: string | null;
+        options: { id: number; text: string; is_correct: boolean }[];
+    }[];
 }>();
 
 defineOptions({
@@ -351,12 +358,16 @@ const formAttributes = computed(() =>
         </div>
     </Form>
 
-    <section v-if="lesson && uploadLimits" class="px-4 pb-6 md:px-6">
+    <section
+        v-if="lesson && uploadLimits"
+        class="grid gap-6 px-4 pb-6 md:px-6 xl:grid-cols-2"
+    >
         <LessonVideoManager
             :lesson-id="lesson.id"
             :video="video ?? null"
             :limits="uploadLimits"
         />
+        <QuizEditor :lesson-id="lesson.id" :questions="questions ?? []" />
     </section>
     <p v-else class="px-4 pb-6 text-sm text-muted-foreground md:px-6">
         Save the lesson first to attach a video.

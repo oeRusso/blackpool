@@ -14,10 +14,16 @@ test.describe('students', () => {
 
     test('do not see the admin navigation', async ({ page }) => {
         await page.goto('/dashboard');
-        await expect(page.getByRole('link', { name: 'Lessons' })).toHaveCount(
+        const sidebar = page.locator('[data-sidebar="sidebar"]');
+        await expect(
+            sidebar.getByRole('link', { name: 'Dashboard' }),
+        ).toBeVisible();
+        await expect(
+            sidebar.getByRole('link', { name: 'Categories' }),
+        ).toHaveCount(0);
+        await expect(sidebar.getByText('Admin', { exact: true })).toHaveCount(
             0,
         );
-        await expect(page.getByText('Admin', { exact: true })).toHaveCount(0);
     });
 
     for (const url of adminPages) {

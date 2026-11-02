@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\LessonVideoController;
+use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,9 @@ Route::middleware(['auth', 'verified', 'can:access-admin'])
             Route::post('uploads/{upload}/complete', 'completeUpload')->whereUuid('upload')->name('uploads.complete');
             Route::delete('/', 'destroy')->name('destroy');
         });
+
+        Route::post('lessons/{lesson}/questions', [QuestionController::class, 'store'])->name('lessons.questions.store');
+        Route::delete('lessons/{lesson}/questions/{question}', [QuestionController::class, 'destroy'])->name('lessons.questions.destroy');
 
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::put('users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
