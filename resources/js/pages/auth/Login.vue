@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+import DemoLogin from '@/components/DemoLogin.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 
 defineOptions({
@@ -35,6 +36,8 @@ defineProps<{
     >
         {{ status }}
     </div>
+
+    <DemoLogin class="mb-6" />
 
     <PasskeyVerify />
 

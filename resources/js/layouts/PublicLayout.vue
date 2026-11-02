@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { LayoutDashboard, Menu } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
+import DemoBanner from '@/components/DemoBanner.vue';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { dashboard, home, login, register } from '@/routes';
@@ -16,6 +17,7 @@ const year = new Date().getFullYear();
 
 <template>
     <div class="flex min-h-screen flex-col bg-background text-foreground">
+        <DemoBanner />
         <header
             class="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         >

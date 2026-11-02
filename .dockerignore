@@ -15,7 +15,7 @@ bootstrap/cache/*.php
 e2e-report
 e2e-results
 e2e/.auth
-docs/screenshots
 .env
 .env.*
 !.env.example
+docs

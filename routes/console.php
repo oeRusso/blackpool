@@ -17,3 +17,6 @@ Schedule::call(fn () => app(ChunkedUploadManager::class)->prune())
 Schedule::command('backup:clean')->daily()->at('01:00')->onOneServer();
 Schedule::command('backup:run')->daily()->at('01:30')->onOneServer();
 Schedule::command('backup:monitor')->daily()->at('09:00');
+
+// Public demo: restore the seeded content every night.
+Schedule::command('demo:reset')->dailyAt('03:00')->when(fn () => config('demo.enabled'));

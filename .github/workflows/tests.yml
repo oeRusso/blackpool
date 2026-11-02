@@ -120,6 +120,7 @@ jobs:
           sed -i "s#^APP_URL=.*#APP_URL=${E2E_BASE_URL}#" .env.e2e
           sed -i "s#^DB_CONNECTION=.*#DB_CONNECTION=sqlite\nDB_DATABASE=${{ github.workspace }}/database/e2e.sqlite#" .env.e2e
           echo "MEDIA_CHUNK_SIZE=1048576" >> .env.e2e
+          sed -i "s/^DEMO_MODE=.*/DEMO_MODE=true/" .env.e2e
           php artisan key:generate --env=e2e --force
           touch database/e2e.sqlite
           php artisan migrate:fresh --seed --force

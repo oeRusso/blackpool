@@ -109,13 +109,15 @@ test.describe('screenshots for the README', () => {
                         ? authFile(role as 'admin')
                         : { cookies: [], origins: [] },
                     colorScheme: scheme,
-                    viewport: { width: 1440, height: 900 },
+                    viewport: { width: 1280, height: 800 },
                 });
                 const page = await context.newPage();
                 await page.goto(url);
                 await page.waitForLoadState('networkidle');
                 await page.screenshot({
-                    path: `docs/screenshots/${name}-${scheme}.png`,
+                    path: `docs/screenshots/${name}-${scheme}.jpg`,
+                    type: 'jpeg',
+                    quality: 80,
                 });
                 await context.close();
             }

@@ -44,6 +44,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'repositoryUrl' => config('app.repository_url'),
+            'demo' => config('demo.enabled') ? [
+                'password' => config('demo.password'),
+                'accounts' => config('demo.accounts'),
+            ] : null,
             'auth' => fn (): array => $this->auth($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
