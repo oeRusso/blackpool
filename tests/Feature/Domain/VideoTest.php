@@ -6,6 +6,7 @@ use App\Enums\VideoStatus;
 use App\Jobs\ProcessUploadedVideo;
 use App\Models\Lesson;
 use App\Models\Video;
+use App\Services\Video\ChunkedUploadManager;
 use App\Services\Video\EmbedResolver;
 use App\Services\Video\HlsTranscoder;
 use Illuminate\Support\Facades\Http;
@@ -219,3 +220,13 @@ it('transcodes a real video to HLS with ffmpeg', function () {
     $disk->assertExists('videos/1/real/thumbnail.jpg');
     $disk->assertMissing('videos/1/real/original.mp4');
 })->group('ffmpeg');
+
+it('prunes abandoned chunk folders', function () {
+    Storage::disk('local')->put('video-chunks/old/0.part', 'x');
+    Storage::disk('local')->put('video-chunks/fresh/0.part', 'x');
+    touch(Storage::disk('local')->path('video-chunks/old'), now()->subDays(2)->getTimestamp());
+
+    expect(app(ChunkedUploadManager::class)->prune())->toBe(1);
+    Storage::disk('local')->assertMissing('video-chunks/old/0.part');
+    Storage::disk('local')->assertExists('video-chunks/fresh/0.part');
+});

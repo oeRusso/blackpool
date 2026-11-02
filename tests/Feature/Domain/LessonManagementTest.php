@@ -6,6 +6,8 @@ use App\Enums\RoleName;
 use App\Models\Category;
 use App\Models\Lesson;
 use App\Models\Level;
+use App\Models\Question;
+use App\Models\Video;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -109,4 +111,22 @@ it('updates and soft deletes a lesson', function () {
 
     $this->actingAs($editor)->delete(route('admin.lessons.destroy', $lesson))->assertRedirect(route('admin.lessons.index'));
     expect($lesson->fresh()->trashed())->toBeTrue();
+});
+
+it('renders the edit page with its video, quiz and upload limits', function () {
+    $lesson = Lesson::factory()->create();
+    Video::factory()->for($lesson)->create();
+    Question::factory()->for($lesson)->withOptions()->create();
+
+    $this->actingAs(userWithRole(RoleName::Editor))
+        ->get(route('admin.lessons.edit', $lesson))
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/lessons/Form')
+            ->where('lesson.id', $lesson->id)
+            ->where('video.source', 'youtube')
+            ->has('questions', 1)
+            ->has('questions.0.options', 3)
+            ->has('uploadLimits.extensions')
+            ->has('levels')
+            ->has('categories'));
 });

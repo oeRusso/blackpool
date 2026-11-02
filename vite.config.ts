@@ -31,6 +31,11 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    test: {
+        environment: 'jsdom',
+        include: ['resources/js/**/*.test.ts'],
+        restoreMocks: true,
+    },
     server: {
         watch: {
             ignored: [
