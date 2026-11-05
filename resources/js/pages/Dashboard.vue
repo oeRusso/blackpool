@@ -21,6 +21,9 @@ import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { index as catalog, show } from '@/routes/lessons';
 import type { LessonCard as LessonCardType } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps<{
     stats: {
@@ -57,25 +60,25 @@ const overall = computed(() =>
 
 const tiles = computed(() => [
     {
-        label: 'Lessons completed',
+        label: t('Lessons completed'),
         value: `${props.stats.completed}/${props.stats.total}`,
         icon: BookOpenCheck,
         test: 'completed',
     },
     {
-        label: 'In progress',
+        label: t('In progress'),
         value: props.stats.inProgress,
         icon: PlayCircle,
         test: 'in-progress',
     },
     {
-        label: 'Quizzes passed',
+        label: t('Quizzes passed'),
         value: props.stats.quizzesPassed,
         icon: ListChecks,
         test: 'quizzes',
     },
     {
-        label: 'Completed this week',
+        label: t('Completed this week'),
         value: props.stats.completedThisWeek,
         icon: Flame,
         test: 'week',
@@ -84,7 +87,7 @@ const tiles = computed(() => [
 </script>
 
 <template>
-    <Head title="My learning" />
+    <Head :title="t('My learning')" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <div
@@ -92,15 +95,24 @@ const tiles = computed(() => [
         >
             <div>
                 <h1 class="text-2xl font-semibold tracking-tight">
-                    Welcome back,
-                    {{ $page.props.auth.user.name.split(' ')[0] }} 👋
+                    {{
+                        t('Welcome back, :name', {
+                            name: $page.props.auth.user.name.split(' ')[0],
+                        })
+                    }}
+                    👋
                 </h1>
                 <p class="text-sm text-muted-foreground">
-                    You have completed {{ overall }}% of the course.
+                    {{
+                        t('You have completed :percent% of the course.', {
+                            percent: overall,
+                        })
+                    }}
                 </p>
             </div>
             <Button as-child
-                ><Link :href="catalog()">Browse lessons <ArrowRight /></Link
+                ><Link :href="catalog()"
+                    >{{ t('Browse lessons') }} <ArrowRight /></Link
             ></Button>
         </div>
 
@@ -138,7 +150,8 @@ const tiles = computed(() => [
                 >
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2"
-                            ><GraduationCap class="size-5" /> Up next</CardTitle
+                            ><GraduationCap class="size-5" />
+                            {{ t('Up next') }}</CardTitle
                         >
                     </CardHeader>
                     <CardContent
@@ -156,20 +169,26 @@ const tiles = computed(() => [
                             </p>
                         </div>
                         <Button as-child
-                            ><Link :href="show(nextLesson.slug)"
-                                >Start lesson</Link
-                            ></Button
+                            ><Link :href="show(nextLesson.slug)">{{
+                                t('Start lesson')
+                            }}</Link></Button
                         >
                     </CardContent>
                 </Card>
 
                 <section class="space-y-3">
-                    <h2 class="text-lg font-semibold">Continue learning</h2>
+                    <h2 class="text-lg font-semibold">
+                        {{ t('Continue learning') }}
+                    </h2>
                     <EmptyState
                         v-if="continueLearning.length === 0"
                         :icon="PlayCircle"
-                        title="Nothing in progress"
-                        description="Open any lesson to start tracking your progress."
+                        :title="t('Nothing in progress')"
+                        :description="
+                            t(
+                                'Open any lesson to start tracking your progress.',
+                            )
+                        "
                     />
                     <div v-else class="grid gap-4 sm:grid-cols-2">
                         <LessonCard
@@ -182,12 +201,12 @@ const tiles = computed(() => [
 
                 <section class="space-y-3">
                     <h2 class="flex items-center gap-2 text-lg font-semibold">
-                        <Heart class="size-4" /> Saved lessons
+                        <Heart class="size-4" /> {{ t('Saved lessons') }}
                     </h2>
                     <EmptyState
                         v-if="favorites.length === 0"
                         :icon="Heart"
-                        title="No saved lessons yet"
+                        :title="t('No saved lessons yet')"
                     />
                     <div
                         v-else
@@ -206,7 +225,9 @@ const tiles = computed(() => [
             <div class="space-y-6">
                 <Card>
                     <CardHeader
-                        ><CardTitle>Progress by level</CardTitle></CardHeader
+                        ><CardTitle>{{
+                            t('Progress by level')
+                        }}</CardTitle></CardHeader
                     >
                     <CardContent class="space-y-4">
                         <div
@@ -220,7 +241,7 @@ const tiles = computed(() => [
                             >
                                 <span class="flex items-center gap-2"
                                     ><LevelBadge :code="level.code" />
-                                    {{ level.name }}</span
+                                    {{ t(level.name) }}</span
                                 >
                                 <span class="text-muted-foreground tabular-nums"
                                     >{{ level.completed }}/{{
@@ -241,14 +262,20 @@ const tiles = computed(() => [
 
                 <Card>
                     <CardHeader
-                        ><CardTitle>Recent quizzes</CardTitle></CardHeader
+                        ><CardTitle>{{
+                            t('Recent quizzes')
+                        }}</CardTitle></CardHeader
                     >
                     <CardContent>
                         <p
                             v-if="recentAttempts.length === 0"
                             class="text-sm text-muted-foreground"
                         >
-                            Complete a lesson quiz to see your scores here.
+                            {{
+                                t(
+                                    'Complete a lesson quiz to see your scores here.',
+                                )
+                            }}
                         </p>
                         <ul v-else class="divide-y text-sm">
                             <li
@@ -278,8 +305,14 @@ const tiles = computed(() => [
                             v-if="recentAttempts[0]"
                             class="mt-2 text-xs text-muted-foreground"
                         >
-                            Last attempt
-                            {{ formatDate(recentAttempts[0].created_at) }}
+                            {{
+                                t('Last attempt :date', {
+                                    date: formatDate(
+                                        recentAttempts[0].created_at,
+                                        locale,
+                                    ),
+                                })
+                            }}
                         </p>
                     </CardContent>
                 </Card>
@@ -287,13 +320,16 @@ const tiles = computed(() => [
                 <Card v-if="!isPremium" class="border-primary/30 bg-primary/5">
                     <CardHeader
                         ><CardTitle class="flex items-center gap-2"
-                            ><Sparkles class="size-5" /> Go premium</CardTitle
+                            ><Sparkles class="size-5" />
+                            {{ t('Go premium') }}</CardTitle
                         ></CardHeader
                     >
                     <CardContent class="text-sm text-foreground/80">
-                        Premium unlocks every lesson, worksheet and quiz. In
-                        this demo, an administrator grants premium access from
-                        the Users page.
+                        {{
+                            t(
+                                'Premium unlocks every lesson, worksheet and quiz. In this demo, an administrator grants premium access from the Users page.',
+                            )
+                        }}
                     </CardContent>
                 </Card>
             </div>

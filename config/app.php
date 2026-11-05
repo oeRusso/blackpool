@@ -85,6 +85,13 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
+    // Interface languages the visitor can pick. The lesson content itself is
+    // English (it is an English-learning platform); only the UI is translated.
+    'supported_locales' => [
+        'en' => 'English',
+        'es' => 'Español',
+    ],
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*

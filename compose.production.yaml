@@ -83,6 +83,21 @@ services:
             CONTAINER_ROLE: scheduler
         command: ['php', 'artisan', 'schedule:work']
 
+    # Pre-renders public pages for SEO. Only reachable on the internal network
+    # (it also exposes /shutdown); if it is down, pages render client-side.
+    ssr:
+        image: blackpool-ssr:${IMAGE_TAG:-latest}
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+            target: ssr
+        restart: unless-stopped
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:13714/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+
     mysql:
         image: mysql:8.4
         restart: unless-stopped

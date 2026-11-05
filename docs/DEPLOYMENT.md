@@ -11,6 +11,11 @@ Navegador ──HTTPS──▶ Cloudflare (DNS, proxy, WAF, caché)
    │  nginx   │──────────▶│ php-fpm  │──▶│ MySQL  │   │ Redis │
    │ (web)    │◀─X-Accel──│  (app)   │   └────────┘   └───────┘
    └──────────┘           └──────────┘        ▲            ▲
+                               │ HTML de páginas públicas
+                               ▼
+                          ┌──────────┐
+                          │   ssr    │ (Node, solo red interna)
+                          └──────────┘
         │ lee /storage (solo lectura)          │            │
         ▼                 ┌──────────┐   ┌───────────┐     │
    volumen storage ◀──────│  worker  │   │ scheduler │─────┘
@@ -60,6 +65,8 @@ Variables importantes:
 | `APP_URL`                                      | URL pública con `https://`                                                         |
 | `DB_PASSWORD`, `DB_ROOT_PASSWORD`              | Contraseñas de MySQL (genera unas largas)                                          |
 | `MEDIA_ACCEL_REDIRECT_PREFIX=/protected-media` | Nginx sirve los vídeos tras autorizar en Laravel                                   |
+| `INERTIA_SSR_URL=http://ssr:13714`             | Contenedor que pre-renderiza las páginas públicas (SEO)                            |
+| `INERTIA_SSR_ENSURE_BUNDLE_EXISTS=false`       | El bundle de SSR vive en el contenedor `ssr`, no en `app`                          |
 | `MEDIA_CHUNK_SIZE`                             | Tamaño de cada trozo de subida (8 MB; debe ser menor que los 100 MB de Cloudflare) |
 | `REDIS_QUEUE_RETRY_AFTER=3660`                 | Debe superar el timeout del job de ffmpeg (3600 s). Hay un test que lo verifica.   |
 | `BACKUP_*`                                     | Bucket de Backblaze B2 para los backups                                            |
@@ -118,7 +125,13 @@ Configura en **Settings → Secrets and variables → Actions**:
 - Logs: `docker compose -f compose.production.yaml logs -f app worker`.
 - Errores: opcionalmente, GlitchTip autoalojado o el plan gratuito de Sentry.
 
-## 8. Verificación local del stack de producción
+## 8. SEO
+
+- `https://tu-dominio/sitemap.xml`: lecciones publicadas y páginas por nivel. Envíalo en Google Search Console y Bing Webmaster Tools (ambos gratuitos).
+- `robots.txt` solo permite indexar cuando `APP_ENV=production`.
+- El contenedor `ssr` no publica puertos. Si se cae, las páginas se renderizan en el navegador; compruébalo con `docker compose -f compose.production.yaml ps ssr`.
+
+## 9. Verificación local del stack de producción
 
 El mismo `compose.production.yaml` se puede levantar en local sin TLS. Así se ha validado este repositorio: los 60 tests de Playwright pasan contra Nginx, PHP-FPM, MySQL y Redis.
 

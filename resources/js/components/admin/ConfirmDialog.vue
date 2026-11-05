@@ -11,6 +11,9 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 withDefaults(
     defineProps<{
@@ -19,7 +22,7 @@ withDefaults(
         confirmLabel?: string;
         destructive?: boolean;
     }>(),
-    { confirmLabel: 'Confirm', destructive: true },
+    { confirmLabel: undefined, destructive: true },
 );
 
 const emit = defineEmits<{ confirm: [] }>();
@@ -38,7 +41,7 @@ const emit = defineEmits<{ confirm: [] }>();
                 }}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{{ t('Cancel') }}</AlertDialogCancel>
                 <AlertDialogAction
                     :class="
                         buttonVariants({
@@ -47,7 +50,7 @@ const emit = defineEmits<{ confirm: [] }>();
                     "
                     @click="emit('confirm')"
                 >
-                    {{ confirmLabel }}
+                    {{ confirmLabel ?? t('Confirm') }}
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>

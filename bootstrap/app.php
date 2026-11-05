@@ -4,11 +4,13 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ProtectDemoAccounts;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -19,7 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        // `locale` stays readable outside the web middleware (e.g. branded 404 pages).
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'locale']);
 
         // Nginx runs on the private Docker network in front of PHP-FPM and restores
         // the visitor IP from Cloudflare's CF-Connecting-IP header.
@@ -27,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             SecurityHeaders::class,
+            SetLocale::class,
             ProtectDemoAccounts::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
@@ -46,6 +50,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 || ! in_array($status, [403, 404, 419, 429, 500, 503], true)) {
                 return $response;
             }
+
+            // Unmatched routes never run the web middleware, so resolve the
+            // language and the shared props (auth, locale, demo…) here.
+            App::setLocale(SetLocale::resolve($request));
+            Inertia::share(app(HandleInertiaRequests::class)->share($request));
 
             return Inertia::render('Error', ['status' => $status])
                 ->toResponse($request)

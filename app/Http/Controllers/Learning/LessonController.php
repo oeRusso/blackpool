@@ -86,7 +86,35 @@ class LessonController extends Controller
                 'total' => $siblings->count(),
             ],
             'related' => $related,
-        ]);
+        ])->withViewData(['jsonLd' => $lesson->isPublished() ? $this->structuredData($lesson) : null]);
+    }
+
+    /**
+     * schema.org metadata so search engines understand the lesson (level,
+     * duration, free or premium). Rendered by Blade, so it works without JS.
+     *
+     * @return array<string, mixed>
+     */
+    private function structuredData(Lesson $lesson): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'LearningResource',
+            'name' => $lesson->title,
+            'description' => $lesson->summary,
+            'url' => route('lessons.show', $lesson),
+            'image' => $lesson->coverUrl(),
+            'inLanguage' => 'en',
+            'learningResourceType' => 'Lesson',
+            'educationalLevel' => "CEFR {$lesson->level->code}",
+            'isAccessibleForFree' => $lesson->is_free,
+            'timeRequired' => $lesson->duration_seconds ? 'PT'.max(1, (int) round($lesson->duration_seconds / 60)).'M' : null,
+            'datePublished' => $lesson->published_at?->toIso8601String(),
+            'dateModified' => $lesson->updated_at?->toIso8601String(),
+            'keywords' => $lesson->categories->pluck('name')->implode(', ') ?: null,
+            'author' => $lesson->author ? ['@type' => 'Person', 'name' => $lesson->author->name] : null,
+            'provider' => ['@type' => 'Organization', 'name' => config('app.name'), 'url' => config('app.url')],
+        ], fn ($value) => $value !== null);
     }
 
     public function worksheet(Lesson $lesson): StreamedResponse

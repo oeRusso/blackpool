@@ -31,6 +31,11 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    // The SSR bundle is self-contained so the production `ssr` container only
+    // needs Node and bootstrap/ssr, not node_modules.
+    ssr: {
+        noExternal: true,
+    },
     test: {
         environment: 'jsdom',
         include: ['resources/js/**/*.test.ts'],

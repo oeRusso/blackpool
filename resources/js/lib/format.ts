@@ -1,9 +1,19 @@
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-});
+/**
+ * Dates are formatted in UTC with an explicit locale so the server-rendered
+ * HTML (Node) and the hydrated page (browser) always produce the same text.
+ */
+export function formatDate(
+    value: string | null | undefined,
+    locale = 'en',
+): string {
+    if (!value) {
+        return '—';
+    }
 
-export function formatDate(value: string | null | undefined): string {
-    return value ? dateFormatter.format(new Date(value)) : '—';
+    return new Intl.DateTimeFormat(locale, {
+        dateStyle: 'medium',
+        timeZone: 'UTC',
+    }).format(new Date(value));
 }
 
 export function formatDuration(seconds: number | null | undefined): string {

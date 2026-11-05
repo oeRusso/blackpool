@@ -2,6 +2,9 @@
 import { Play } from '@lucide/vue';
 import { onBeforeUnmount, ref, useTemplateRef, watch } from 'vue';
 import type { LessonVideo } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = withDefaults(
     defineProps<{
@@ -96,8 +99,10 @@ onBeforeUnmount(() => hls?.destroy());
             >
                 {{
                     video.status === 'processing'
-                        ? 'This video is being prepared. Please check back in a few minutes.'
-                        : 'This video is temporarily unavailable.'
+                        ? t(
+                              'This video is being prepared. Please check back in a few minutes.',
+                          )
+                        : t('This video is temporarily unavailable.')
                 }}
             </div>
         </template>
@@ -124,7 +129,7 @@ onBeforeUnmount(() => hls?.destroy());
                 v-else
                 type="button"
                 class="group relative size-full"
-                :aria-label="`Play ${video.title ?? title}`"
+                :aria-label="t('Play :title', { title: video.title ?? title })"
                 data-test="play-embed"
                 @click="embedActivated = true"
             >

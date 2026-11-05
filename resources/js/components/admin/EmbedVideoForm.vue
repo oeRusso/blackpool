@@ -6,6 +6,9 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ lessonId: number }>();
 
@@ -37,7 +40,7 @@ function submit(): void {
         @submit.prevent="submit"
     >
         <div class="grid flex-1 gap-1">
-            <Label for="video-url" class="sr-only">Video URL</Label>
+            <Label for="video-url" class="sr-only">{{ t('Video URL') }}</Label>
             <Input
                 id="video-url"
                 v-model="url"
@@ -47,8 +50,8 @@ function submit(): void {
             />
             <InputError :message="error" />
         </div>
-        <Button type="submit" :disabled="processing" data-test="link-video"
-            >Link video</Button
-        >
+        <Button type="submit" :disabled="processing" data-test="link-video">{{
+            t('Link video')
+        }}</Button>
     </form>
 </template>

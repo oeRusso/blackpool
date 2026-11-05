@@ -30,6 +30,13 @@ import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes/admin';
 import { index } from '@/routes/admin/users';
 import type { AdminUserRow, Option, Paginated } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t, locale } = useI18n();
+
+// Role labels come translated from the server; fall back to the raw name.
+const roleLabel = (name: string): string =>
+    props.roles.find((role) => role.value === name)?.label ?? name;
 
 const props = defineProps<{
     users: Paginated<AdminUserRow>;
@@ -93,27 +100,27 @@ const roleVariant = (role: string) =>
 </script>
 
 <template>
-    <Head title="Users" />
+    <Head :title="t('Users')" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <PageHeader
-            title="Users"
-            description="Grant premium access or staff roles."
+            :title="t('Users')"
+            :description="t('Grant premium access or staff roles.')"
         />
 
         <div class="flex flex-col gap-2 sm:flex-row">
             <SearchInput
                 v-model="filters.search"
-                placeholder="Search by name or email…"
+                :placeholder="t('Search by name or email…')"
                 @search="apply"
             />
             <NativeSelect
                 v-model="filters.role"
                 class="sm:w-48"
-                aria-label="Filter by role"
+                :aria-label="t('Filter by role')"
                 @change="apply"
             >
-                <option value="">All roles</option>
+                <option value="">{{ t('All roles') }}</option>
                 <option
                     v-for="role in roles"
                     :key="role.value"
@@ -127,20 +134,22 @@ const roleVariant = (role: string) =>
         <EmptyState
             v-if="users.data.length === 0"
             :icon="Users"
-            title="No users found"
+            :title="t('No users found')"
         />
 
         <div v-else class="overflow-hidden rounded-xl border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead class="hidden md:table-cell"
-                            >Joined</TableHead
-                        >
+                        <TableHead>{{ t('Name') }}</TableHead>
+                        <TableHead>{{ t('Roles') }}</TableHead>
+                        <TableHead class="hidden md:table-cell">{{
+                            t('Joined')
+                        }}</TableHead>
                         <TableHead class="w-32"
-                            ><span class="sr-only">Actions</span></TableHead
+                            ><span class="sr-only">{{
+                                t('Actions')
+                            }}</span></TableHead
                         >
                     </TableRow>
                 </TableHeader>
@@ -162,19 +171,20 @@ const roleVariant = (role: string) =>
                                     v-for="role in user.roles"
                                     :key="role"
                                     :variant="roleVariant(role)"
-                                    class="capitalize"
-                                    >{{ role }}</Badge
+                                    >{{ roleLabel(role) }}</Badge
                                 >
                                 <span
                                     v-if="user.roles.length === 0"
                                     class="text-xs text-muted-foreground"
-                                    >No role</span
+                                    >{{ t('No role') }}</span
                                 >
                             </div>
                         </TableCell>
                         <TableCell
                             class="hidden text-sm text-muted-foreground md:table-cell"
-                            >{{ formatDate(user.created_at) }}</TableCell
+                            >{{
+                                formatDate(user.created_at, locale)
+                            }}</TableCell
                         >
                         <TableCell class="text-right">
                             <Button
@@ -183,10 +193,12 @@ const roleVariant = (role: string) =>
                                 size="sm"
                                 @click="openRoles(user)"
                             >
-                                <ShieldCheck /> Roles
+                                <ShieldCheck /> {{ t('Roles') }}
                             </Button>
-                            <span v-else class="text-xs text-muted-foreground"
-                                >You</span
+                            <span
+                                v-else
+                                class="text-xs text-muted-foreground"
+                                >{{ t('You') }}</span
                             >
                         </TableCell>
                     </TableRow>
@@ -203,11 +215,14 @@ const roleVariant = (role: string) =>
     >
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Roles for {{ editing?.name }}</DialogTitle>
-                <DialogDescription
-                    >Premium students can watch every lesson. Editors and admins
-                    can access the admin area.</DialogDescription
-                >
+                <DialogTitle>{{
+                    t('Roles for :name', { name: editing?.name ?? '' })
+                }}</DialogTitle>
+                <DialogDescription>{{
+                    t(
+                        'Premium students can watch every lesson. Editors and admins can access the admin area.',
+                    )
+                }}</DialogDescription>
             </DialogHeader>
             <div class="grid gap-2">
                 <label
@@ -230,7 +245,7 @@ const roleVariant = (role: string) =>
                     :disabled="saving"
                     data-test="save-roles"
                     @click="saveRoles"
-                    >Save roles</Button
+                    >{{ t('Save roles') }}</Button
                 >
             </DialogFooter>
         </DialogContent>

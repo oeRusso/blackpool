@@ -4,10 +4,14 @@ import { LayoutDashboard, Menu } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import DemoBanner from '@/components/DemoBanner.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { dashboard, home, login, register } from '@/routes';
+import { dashboard, home, login, register, sitemap } from '@/routes';
 import { index as catalog } from '@/routes/lessons';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -29,65 +33,74 @@ const year = new Date().getFullYear();
                 </Link>
                 <nav
                     class="hidden items-center gap-1 text-sm md:flex"
-                    aria-label="Main"
+                    :aria-label="t('Main')"
                 >
                     <Button variant="ghost" as-child
-                        ><Link :href="catalog()">Lessons</Link></Button
+                        ><Link :href="catalog()">{{
+                            t('Lessons')
+                        }}</Link></Button
                     >
                     <template v-if="user">
                         <Button as-child data-test="nav-dashboard">
                             <Link :href="dashboard()"
-                                ><LayoutDashboard /> My learning</Link
+                                ><LayoutDashboard />
+                                {{ t('My learning') }}</Link
                             >
                         </Button>
                     </template>
                     <template v-else>
                         <Button variant="ghost" as-child
-                            ><Link :href="login()">Log in</Link></Button
+                            ><Link :href="login()">{{
+                                t('Log in')
+                            }}</Link></Button
                         >
                         <Button as-child
-                            ><Link :href="register()"
-                                >Start for free</Link
-                            ></Button
+                            ><Link :href="register()">{{
+                                t('Start for free')
+                            }}</Link></Button
                         >
                     </template>
+                    <LocaleSwitcher />
                 </nav>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    class="md:hidden"
-                    aria-label="Toggle menu"
-                    @click="mobileOpen = !mobileOpen"
-                >
-                    <Menu />
-                </Button>
+                <div class="flex items-center gap-1 md:hidden">
+                    <LocaleSwitcher />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        :aria-label="t('Toggle menu')"
+                        :aria-expanded="mobileOpen"
+                        @click="mobileOpen = !mobileOpen"
+                    >
+                        <Menu />
+                    </Button>
+                </div>
             </div>
             <nav
                 v-if="mobileOpen"
                 class="grid gap-1 border-t px-4 py-3 md:hidden"
-                aria-label="Mobile"
+                :aria-label="t('Mobile')"
             >
                 <Link
                     :href="catalog()"
                     class="rounded-md px-3 py-2 hover:bg-muted"
-                    >Lessons</Link
+                    >{{ t('Lessons') }}</Link
                 >
                 <Link
                     v-if="user"
                     :href="dashboard()"
                     class="rounded-md px-3 py-2 hover:bg-muted"
-                    >My learning</Link
+                    >{{ t('My learning') }}</Link
                 >
                 <template v-else>
                     <Link
                         :href="login()"
                         class="rounded-md px-3 py-2 hover:bg-muted"
-                        >Log in</Link
+                        >{{ t('Log in') }}</Link
                     >
                     <Link
                         :href="register()"
                         class="rounded-md px-3 py-2 hover:bg-muted"
-                        >Start for free</Link
+                        >{{ t('Start for free') }}</Link
                     >
                 </template>
             </nav>
@@ -102,19 +115,23 @@ const year = new Date().getFullYear();
                 class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row"
             >
                 <p>
-                    © {{ year }} BlackPool · Learn English, one level at a time.
+                    © {{ year }} BlackPool ·
+                    {{ t('Learn English, one level at a time.') }}
                 </p>
-                <nav class="flex gap-4" aria-label="Footer">
-                    <Link :href="catalog()" class="hover:text-foreground"
-                        >Lessons</Link
-                    >
+                <nav class="flex gap-4" :aria-label="t('Footer')">
+                    <Link :href="catalog()" class="hover:text-foreground">{{
+                        t('Lessons')
+                    }}</Link>
+                    <a :href="sitemap.url()" class="hover:text-foreground">{{
+                        t('Sitemap')
+                    }}</a>
                     <a
                         v-if="page.props.repositoryUrl"
                         :href="String(page.props.repositoryUrl)"
                         class="hover:text-foreground"
                         rel="noopener"
                         target="_blank"
-                        >Source code</a
+                        >{{ t('Source code') }}</a
                     >
                 </nav>
             </div>

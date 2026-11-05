@@ -52,6 +52,15 @@
 
 - Authentication with Fortify: email verification, 2FA, **passkeys** and password confirmation.
 - Server-side authorization (Policies + `can:` middleware) with a role/permission model.
+- **English / Spanish interface**:
+    - detected from the browser;
+    - switchable at any time and remembered on the account;
+    - also used for emails, validation and server messages.
+- **SEO**:
+    - server-side rendering of public pages (Inertia SSR);
+    - canonical and Open Graph tags;
+    - schema.org JSON-LD for lessons;
+    - `sitemap.xml` and `robots.txt`.
 - Dark mode, accessible UI (axe-checked to WCAG 2.1 AA), branded error pages.
 - **Public demo mode**: one-click demo logins, protected shared accounts and a nightly content reset.
 
@@ -60,7 +69,7 @@
 | Layer    | Choice                                                                                                                    |
 | -------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Backend  | PHP 8.4, **Laravel 13**, Fortify, spatie/laravel-permission, Laravel Pulse                                                |
-| Frontend | **Inertia 3**, **Vue 3.5 + TypeScript**, Wayfinder (typed routes), shadcn-vue (reka-ui), **Tailwind 4**, hls.js           |
+| Frontend | **Inertia 3** (+ SSR), **Vue 3.5 + TypeScript**, Wayfinder (typed routes), shadcn-vue (reka-ui), **Tailwind 4**, hls.js   |
 | Media    | ffmpeg/ffprobe (HLS transcoding), GD (WebP covers), chunked uploads                                                       |
 | Data     | MySQL 8.4 (production), SQLite (dev/tests), Redis (cache, sessions, queues)                                               |
 | Quality  | **Pest 5** (feature + architecture), **Larastan level 7**, Pint, **Vitest**, **Playwright** + axe-core, Vite+ lint/format |
@@ -81,6 +90,7 @@ flowchart LR
     subgraph Server["Docker stack on the VPS"]
         Nginx[Nginx]
         App[Laravel · php-fpm]
+        SSR[Inertia SSR · Node]
         Worker[Queue worker · ffmpeg]
         Scheduler[Scheduler]
         DB[(MySQL)]
@@ -89,6 +99,7 @@ flowchart LR
     end
 
     UI -- Inertia requests --> Nginx --> App
+    App -- "public pages: render HTML" --> SSR
     Uploader -- "8 MB raw chunks" --> Nginx
     App -- dispatch ProcessUploadedVideo --> Redis --> Worker
     Worker -- "probe · thumbnail · HLS 360p/720p" --> Media
@@ -122,6 +133,8 @@ flowchart LR
 | Admins cannot change their own roles; the admin role is immutable                                       | `UserPolicy`, `RolePolicy`                         | `UserAndRoleManagementTest`                     |
 | Queue `retry_after` must exceed the ffmpeg job timeout                                                  | `config/queue.php`                                 | `VideoTest`                                     |
 | Demo accounts cannot change credentials or security settings                                            | `ProtectDemoAccounts`                              | `DemoModeTest`, `demo.spec.ts`                  |
+| Interface language: account → cookie → browser → default; lessons stay in English                       | `SetLocale`, `LocaleController`                    | `LocalizationTest`, `i18n.spec.ts`              |
+| Only published lessons appear in the sitemap; only production is indexable                              | `SeoController`                                    | `SeoTest`, `seo.spec.ts`                        |
 
 ## Getting started
 
@@ -166,7 +179,7 @@ bin/d ./vendor/bin/phpstan analyse      # Larastan level 7
 bin/d ./vendor/bin/pint --test          # code style
 bin/d npm run check && bin/d npm run types:check   # lint, format, vue-tsc
 bin/d npm run test                      # Vitest unit tests
-bin/e2e                                 # Playwright: boots a seeded app + queue worker, runs 62 specs
+bin/e2e                                 # Playwright: boots a seeded app + SSR server + queue worker
 E2E_BASE_URL=http://127.0.0.1:8020 bin/e2e   # …or against any running stack (e.g. production compose)
 ```
 
@@ -175,6 +188,7 @@ The Playwright suite covers:
 - authentication and authorization per role;
 - the CRUD flows and the chunked video upload → transcode → playback flow;
 - quizzes and progress, the demo mode, security headers and CSP violations;
+- the Spanish interface, server-side rendering without JavaScript, hydration, the sitemap and the structured data;
 - **axe-core WCAG 2.1 AA** checks on 12 pages.
 
 It also captures the screenshots above (`SCREENSHOTS=1 bin/e2e e2e/ui.spec.ts --grep screenshots`).
@@ -185,6 +199,7 @@ Production runs on a single VPS with `compose.production.yaml`:
 
 - **web**: Nginx with X-Accel-Redirect and Cloudflare real IPs;
 - **app**: php-fpm with OPcache JIT;
+- **ssr**: Node server that pre-renders public pages;
 - **worker**: queue worker with ffmpeg;
 - **scheduler**;
 - **MySQL 8.4** and **Redis 7**.
@@ -207,7 +222,9 @@ app/
 resources/js/
 ├── pages/              # Inertia pages: learn/, admin/, auth/, settings/
 ├── components/         # VideoPlayer, LessonCard, QuizCard, admin/*, ui/* (shadcn-vue)
-└── composables/        # useChunkedUpload, …
+├── composables/        # useChunkedUpload, …
+└── lib/i18n.ts         # useI18n(): translations shared with lang/es.json
+lang/es.json            # Spanish catalogue (backend + frontend), lang/es/*.php
 tests/                  # Pest: Feature/Domain/*, Arch/
 e2e/                    # Playwright specs
 docker/                 # dev image and production Dockerfile + Nginx config
@@ -222,6 +239,7 @@ The key decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 2. [Server-side authorization with Policies and permissions](docs/adr/0002-server-side-authorization.md)
 3. [Hybrid video: chunked uploads + HLS, or YouTube/Vimeo embeds](docs/adr/0003-hybrid-video-hls.md)
 4. [Single-VPS Docker deployment behind Cloudflare](docs/adr/0004-docker-vps-cloudflare.md)
+5. [Lightweight i18n and Inertia SSR for SEO](docs/adr/0005-i18n-and-ssr.md)
 
 ## History
 

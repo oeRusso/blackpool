@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/card';
 import { submit as submitQuiz } from '@/routes/lessons/quiz';
 import type { Quiz } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ quiz: Quiz; lessonSlug: string }>();
 
@@ -63,13 +66,14 @@ function optionState(
     <Card data-test="quiz">
         <CardHeader>
             <CardTitle class="flex items-center gap-2"
-                ><ListChecks class="size-5" /> Check your
-                understanding</CardTitle
+                ><ListChecks class="size-5" />
+                {{ t('Check your understanding') }}</CardTitle
             >
-            <CardDescription
-                >Score {{ quiz.passPercentage }}% or more to complete the
-                lesson.</CardDescription
-            >
+            <CardDescription>{{
+                t('Score :percent% or more to complete the lesson.', {
+                    percent: quiz.passPercentage,
+                })
+            }}</CardDescription>
         </CardHeader>
 
         <CardContent v-if="reviewing && quiz.lastAttempt" class="space-y-5">
@@ -87,11 +91,18 @@ function optionState(
                     class="size-6 shrink-0"
                 />
                 <p class="font-medium">
-                    You scored {{ quiz.lastAttempt.score }}/{{
-                        quiz.lastAttempt.total
+                    {{
+                        t('You scored :score/:total (:percent%).', {
+                            score: quiz.lastAttempt.score,
+                            total: quiz.lastAttempt.total,
+                            percent: quiz.lastAttempt.percentage,
+                        })
                     }}
-                    ({{ quiz.lastAttempt.percentage }}%).
-                    {{ quiz.lastAttempt.passed ? 'Passed!' : 'Not quite yet.' }}
+                    {{
+                        quiz.lastAttempt.passed
+                            ? t('Passed!')
+                            : t('Not quite yet.')
+                    }}
                 </p>
             </div>
             <ol class="space-y-4">
@@ -164,14 +175,14 @@ function optionState(
                     type="submit"
                     :disabled="!allAnswered || submitting"
                     data-test="submit-quiz"
-                    >Submit answers</Button
+                    >{{ t('Submit answers') }}</Button
                 >
             </form>
         </CardContent>
 
         <CardFooter v-if="reviewing">
             <Button variant="outline" data-test="retry-quiz" @click="retry"
-                ><RotateCcw /> Try again</Button
+                ><RotateCcw /> {{ t('Try again') }}</Button
             >
         </CardFooter>
     </Card>

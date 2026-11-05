@@ -121,6 +121,7 @@ jobs:
           sed -i "s#^DB_CONNECTION=.*#DB_CONNECTION=sqlite\nDB_DATABASE=${{ github.workspace }}/database/e2e.sqlite#" .env.e2e
           echo "MEDIA_CHUNK_SIZE=1048576" >> .env.e2e
           sed -i "s/^DEMO_MODE=.*/DEMO_MODE=true/" .env.e2e
+          echo "INERTIA_SSR_THROW_ON_ERROR=true" >> .env.e2e
           php artisan key:generate --env=e2e --force
           touch database/e2e.sqlite
           php artisan migrate:fresh --seed --force
@@ -130,11 +131,12 @@ jobs:
         run: >
           ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=duration=6:size=1280x720:rate=25
           -f lavfi -i sine=frequency=440:duration=6 -shortest -c:v libx264 -b:v 3M -c:a aac -y e2e/fixtures/sample.mp4
-      - name: Start the app and the queue worker
+      - name: Start the app, the SSR server and the queue worker
         run: |
           PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8010 --no-reload > storage/logs/serve.log 2>&1 &
+          node bootstrap/ssr/app.js > storage/logs/ssr.log 2>&1 &
           php artisan queue:work --queue=media,default --tries=2 --timeout=600 > storage/logs/worker.log 2>&1 &
-          for i in $(seq 1 30); do curl -fs "${E2E_BASE_URL}/up" && break; sleep 1; done
+          for i in $(seq 1 30); do curl -fs "${E2E_BASE_URL}/up" && curl -fs http://127.0.0.1:13714/health && break; sleep 1; done
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
         env:

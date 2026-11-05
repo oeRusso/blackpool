@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [2.1.0] — 2026-11-05
+
+### Added
+
+- English/Spanish interface:
+    - language switcher in every layout and in Settings → Appearance;
+    - detection from `Accept-Language`;
+    - the choice is saved on the account and used for emails.
+- Spanish translations for Laravel's validation, auth and password messages (`laravel-lang/common`, dev only).
+- Inertia SSR for public pages, with a self-contained bundle and a new `ssr` container in production.
+- SEO:
+    - `SeoHead` (canonical, Open Graph, Twitter);
+    - schema.org `LearningResource` JSON-LD;
+    - `sitemap.xml`, dynamic `robots.txt` and a default social image.
+- Tests: `LocalizationTest`, `SeoTest`, catalogue completeness checks (Pest and Vitest), and `i18n.spec.ts` / `seo.spec.ts` (no-JS rendering, hydration, metadata).
+
+### Changed
+
+- Dates are formatted in UTC with the interface locale, so server and client render the same text.
+- Branded error pages share the Inertia props and use the visitor's language.
+- Removed unused starter-kit layouts (header and split/card auth layouts).
+- Updated Symfony components (security advisories).
+
 ## [2.0.0] — 2026-11-02
 
 Complete rebuild of the legacy prototype (tag `legacy-baseline`). See `docs/ROADMAP.md`.

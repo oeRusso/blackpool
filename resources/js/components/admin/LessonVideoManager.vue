@@ -24,6 +24,9 @@ import VideoPlayer from '@/components/VideoPlayer.vue';
 import { useChunkedUpload } from '@/composables/useChunkedUpload';
 import { formatDuration } from '@/lib/format';
 import type { LessonVideo } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     lessonId: number;
@@ -69,7 +72,9 @@ function onFileSelected(event: Event): void {
     localError.value = null;
 
     if (file && file.size > props.limits.max_size) {
-        localError.value = `The video may not be larger than ${maxMb.value} MB.`;
+        localError.value = t('The video may not be larger than :size MB.', {
+            size: maxMb.value,
+        });
         selectedFile.value = null;
 
         return;
@@ -110,18 +115,19 @@ const sizeLabel = (bytes: number | null) =>
     <Card data-test="video-manager">
         <CardHeader>
             <CardTitle class="flex items-center gap-2"
-                ><Film class="size-5" /> Video</CardTitle
+                ><Film class="size-5" /> {{ t('Video') }}</CardTitle
             >
-            <CardDescription
-                >Upload a file (transcoded to adaptive HLS) or link a YouTube /
-                Vimeo video.</CardDescription
-            >
+            <CardDescription>{{
+                t(
+                    'Upload a file (transcoded to adaptive HLS) or link a YouTube / Vimeo video.',
+                )
+            }}</CardDescription>
         </CardHeader>
         <CardContent class="space-y-6">
             <div v-if="video" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" class="capitalize">{{
-                        video.source
+                        t(video.source)
                     }}</Badge>
                     <Badge
                         :variant="
@@ -132,7 +138,7 @@ const sizeLabel = (bytes: number | null) =>
                                   : 'secondary'
                         "
                         data-test="video-status"
-                        >{{ video.status }}</Badge
+                        >{{ t(video.status) }}</Badge
                     >
                     <span
                         v-if="video.duration_seconds"
@@ -148,9 +154,11 @@ const sizeLabel = (bytes: number | null) =>
                         video.title ?? video.original_name
                     }}</span>
                     <ConfirmDialog
-                        title="Remove this video?"
-                        description="Uploaded files will be deleted from the server."
-                        confirm-label="Remove"
+                        :title="t('Remove this video?')"
+                        :description="
+                            t('Uploaded files will be deleted from the server.')
+                        "
+                        :confirm-label="t('Remove')"
                         @confirm="removeVideo"
                     >
                         <Button
@@ -158,24 +166,25 @@ const sizeLabel = (bytes: number | null) =>
                             size="sm"
                             class="ml-auto text-destructive"
                             data-test="remove-video"
-                            ><Trash2 /> Remove</Button
+                            ><Trash2 /> {{ t('Remove') }}</Button
                         >
                     </ConfirmDialog>
                 </div>
 
                 <Alert v-if="video.status === 'processing'">
                     <LoaderCircle class="animate-spin" />
-                    <AlertTitle>Processing video…</AlertTitle>
-                    <AlertDescription
-                        >ffmpeg is generating the HLS renditions. This page
-                        updates automatically.</AlertDescription
-                    >
+                    <AlertTitle>{{ t('Processing video…') }}</AlertTitle>
+                    <AlertDescription>{{
+                        t(
+                            'ffmpeg is generating the HLS renditions. This page updates automatically.',
+                        )
+                    }}</AlertDescription>
                 </Alert>
                 <Alert
                     v-else-if="video.status === 'failed'"
                     variant="destructive"
                 >
-                    <AlertTitle>Processing failed</AlertTitle>
+                    <AlertTitle>{{ t('Processing failed') }}</AlertTitle>
                     <AlertDescription>{{ video.error }}</AlertDescription>
                 </Alert>
                 <VideoPlayer v-else :video="video" />
@@ -184,7 +193,7 @@ const sizeLabel = (bytes: number | null) =>
             <Tabs default-value="upload">
                 <TabsList>
                     <TabsTrigger value="upload"
-                        ><Upload /> Upload file</TabsTrigger
+                        ><Upload /> {{ t('Upload file') }}</TabsTrigger
                     >
                     <TabsTrigger value="embed"
                         ><Link2 /> YouTube / Vimeo</TabsTrigger
@@ -192,7 +201,9 @@ const sizeLabel = (bytes: number | null) =>
                 </TabsList>
 
                 <TabsContent value="upload" class="space-y-3 pt-2">
-                    <Label for="video-file" class="sr-only">Video file</Label>
+                    <Label for="video-file" class="sr-only">{{
+                        t('Video file')
+                    }}</Label>
                     <Input
                         id="video-file"
                         ref="fileInput"
@@ -203,8 +214,15 @@ const sizeLabel = (bytes: number | null) =>
                         @change="onFileSelected"
                     />
                     <p class="text-xs text-muted-foreground">
-                        {{ limits.extensions.join(', ') }} · up to
-                        {{ maxMb }} MB · uploaded in resumable chunks.
+                        {{
+                            t(
+                                ':formats · up to :size MB · uploaded in resumable chunks.',
+                                {
+                                    formats: limits.extensions.join(', '),
+                                    size: maxMb,
+                                },
+                            )
+                        }}
                     </p>
                     <div
                         v-if="uploader.uploading.value"
@@ -224,13 +242,16 @@ const sizeLabel = (bytes: number | null) =>
                                 variant="ghost"
                                 size="sm"
                                 @click="uploader.cancel"
-                                ><X /> Cancel</Button
+                                ><X /> {{ t('Cancel') }}</Button
                             >
                         </div>
                     </div>
                     <InputError
                         :message="
-                            localError ?? uploader.error.value ?? undefined
+                            localError ??
+                            (uploader.error.value
+                                ? t(uploader.error.value)
+                                : undefined)
                         "
                     />
                     <Button
@@ -239,7 +260,7 @@ const sizeLabel = (bytes: number | null) =>
                         data-test="start-upload"
                         @click="startUpload"
                     >
-                        <Upload /> Upload video
+                        <Upload /> {{ t('Upload video') }}
                     </Button>
                 </TabsContent>
 

@@ -16,6 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index } from '@/routes/admin/lessons';
 import type { AdminLesson, LessonVideo, Level, Option } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     lesson?: AdminLesson;
@@ -72,7 +75,13 @@ const formAttributes = computed(() =>
 </script>
 
 <template>
-    <Head :title="isEditing ? `Edit: ${lesson?.title}` : 'New lesson'" />
+    <Head
+        :title="
+            isEditing
+                ? t('Edit: :title', { title: lesson?.title ?? '' })
+                : t('New lesson')
+        "
+    />
 
     <Form
         v-bind="formAttributes"
@@ -80,11 +89,13 @@ const formAttributes = computed(() =>
         v-slot="{ errors, processing, progress }"
     >
         <PageHeader
-            :title="isEditing ? 'Edit lesson' : 'New lesson'"
+            :title="isEditing ? t('Edit lesson') : t('New lesson')"
             :description="
                 isEditing
                     ? `/lessons/${lesson?.slug}`
-                    : 'Fill in the details and attach the learning materials.'
+                    : t(
+                          'Fill in the details and attach the learning materials.',
+                      )
             "
         >
             <template #actions>
@@ -93,7 +104,7 @@ const formAttributes = computed(() =>
                     :disabled="processing"
                     data-test="save-lesson"
                 >
-                    {{ processing ? 'Saving…' : 'Save lesson' }}
+                    {{ processing ? t('Saving…') : t('Save lesson') }}
                 </Button>
             </template>
         </PageHeader>
@@ -110,10 +121,12 @@ const formAttributes = computed(() =>
         <div class="grid gap-6 lg:grid-cols-[1fr_22rem]">
             <div class="space-y-6">
                 <Card>
-                    <CardHeader><CardTitle>Content</CardTitle></CardHeader>
+                    <CardHeader
+                        ><CardTitle>{{ t('Content') }}</CardTitle></CardHeader
+                    >
                     <CardContent class="space-y-4">
                         <div class="grid gap-2">
-                            <Label for="title">Title</Label>
+                            <Label for="title">{{ t('Title') }}</Label>
                             <Input
                                 id="title"
                                 name="title"
@@ -124,7 +137,7 @@ const formAttributes = computed(() =>
                             <InputError :message="errors.title" />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="summary">Summary</Label>
+                            <Label for="summary">{{ t('Summary') }}</Label>
                             <Input
                                 id="summary"
                                 name="summary"
@@ -135,7 +148,7 @@ const formAttributes = computed(() =>
                             <InputError :message="errors.summary" />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="body">Lesson notes</Label>
+                            <Label for="body">{{ t('Lesson notes') }}</Label>
                             <Textarea
                                 id="body"
                                 name="body"
@@ -148,16 +161,19 @@ const formAttributes = computed(() =>
                 </Card>
 
                 <Card>
-                    <CardHeader><CardTitle>Materials</CardTitle></CardHeader>
+                    <CardHeader
+                        ><CardTitle>{{ t('Materials') }}</CardTitle></CardHeader
+                    >
                     <CardContent class="grid gap-6 md:grid-cols-2">
                         <div class="grid content-start gap-2">
                             <Label for="cover" class="flex items-center gap-2"
-                                ><ImageUp class="size-4" /> Cover image</Label
+                                ><ImageUp class="size-4" />
+                                {{ t('Cover image') }}</Label
                             >
                             <img
                                 v-if="coverPreview"
                                 :src="coverPreview"
-                                alt="Cover preview"
+                                :alt="t('Cover preview')"
                                 class="aspect-video w-full rounded-lg border object-cover"
                             />
                             <Input
@@ -177,24 +193,24 @@ const formAttributes = computed(() =>
                                     value="1"
                                     class="accent-primary"
                                 />
-                                Remove current cover
+                                {{ t('Remove current cover') }}
                             </label>
                             <p class="text-xs text-muted-foreground">
-                                Converted to WebP, max 4 MB.
+                                {{ t('Converted to WebP, max 4 MB.') }}
                             </p>
                             <InputError :message="errors.cover" />
                         </div>
                         <div class="grid content-start gap-2">
                             <Label for="pdf" class="flex items-center gap-2"
-                                ><FileText class="size-4" /> PDF
-                                worksheet</Label
+                                ><FileText class="size-4" />
+                                {{ t('PDF worksheet') }}</Label
                             >
                             <p
                                 v-if="lesson?.has_pdf"
                                 class="text-sm text-muted-foreground"
                                 data-test="has-pdf"
                             >
-                                A worksheet is attached.
+                                {{ t('A worksheet is attached.') }}
                             </p>
                             <Input
                                 id="pdf"
@@ -212,10 +228,10 @@ const formAttributes = computed(() =>
                                     value="1"
                                     class="accent-primary"
                                 />
-                                Remove current worksheet
+                                {{ t('Remove current worksheet') }}
                             </label>
                             <p class="text-xs text-muted-foreground">
-                                PDF only, max 20 MB.
+                                {{ t('PDF only, max 20 MB.') }}
                             </p>
                             <InputError :message="errors.pdf" />
                         </div>
@@ -225,10 +241,14 @@ const formAttributes = computed(() =>
 
             <div class="space-y-6">
                 <Card>
-                    <CardHeader><CardTitle>Publishing</CardTitle></CardHeader>
+                    <CardHeader
+                        ><CardTitle>{{
+                            t('Publishing')
+                        }}</CardTitle></CardHeader
+                    >
                     <CardContent class="space-y-4">
                         <div class="grid gap-2">
-                            <Label for="status">Status</Label>
+                            <Label for="status">{{ t('Status') }}</Label>
                             <NativeSelect
                                 id="status"
                                 name="status"
@@ -252,7 +272,9 @@ const formAttributes = computed(() =>
                             <InputError :message="errors.status" />
                         </div>
                         <div class="grid gap-2">
-                            <Label for="published_at">Publish date</Label>
+                            <Label for="published_at">{{
+                                t('Publish date')
+                            }}</Label>
                             <Input
                                 id="published_at"
                                 name="published_at"
@@ -260,7 +282,7 @@ const formAttributes = computed(() =>
                                 :default-value="lesson?.published_at ?? ''"
                             />
                             <p class="text-xs text-muted-foreground">
-                                Leave empty to publish immediately.
+                                {{ t('Leave empty to publish immediately.') }}
                             </p>
                             <InputError :message="errors.published_at" />
                         </div>
@@ -276,13 +298,14 @@ const formAttributes = computed(() =>
                                 data-test="is-free"
                             />
                             <span>
-                                <span class="block text-sm font-medium"
-                                    >Free lesson</span
-                                >
-                                <span class="text-xs text-muted-foreground"
-                                    >Available to every registered student.
-                                    Otherwise premium only.</span
-                                >
+                                <span class="block text-sm font-medium">{{
+                                    t('Free lesson')
+                                }}</span>
+                                <span class="text-xs text-muted-foreground">{{
+                                    t(
+                                        'Available to every registered student. Otherwise premium only.',
+                                    )
+                                }}</span>
                             </span>
                         </label>
                     </CardContent>
@@ -290,11 +313,13 @@ const formAttributes = computed(() =>
 
                 <Card>
                     <CardHeader
-                        ><CardTitle>Classification</CardTitle></CardHeader
+                        ><CardTitle>{{
+                            t('Classification')
+                        }}</CardTitle></CardHeader
                     >
                     <CardContent class="space-y-4">
                         <div class="grid gap-2">
-                            <Label for="level_id">CEFR level</Label>
+                            <Label for="level_id">{{ t('CEFR level') }}</Label>
                             <NativeSelect
                                 id="level_id"
                                 name="level_id"
@@ -302,21 +327,21 @@ const formAttributes = computed(() =>
                                 required
                             >
                                 <option value="" disabled>
-                                    Select a level
+                                    {{ t('Select a level') }}
                                 </option>
                                 <option
                                     v-for="level in levels"
                                     :key="level.id"
                                     :value="level.id"
                                 >
-                                    {{ level.code }} · {{ level.name }}
+                                    {{ level.code }} · {{ t(level.name) }}
                                 </option>
                             </NativeSelect>
                             <InputError :message="errors.level_id" />
                         </div>
                         <fieldset class="grid gap-2">
                             <legend class="mb-2 text-sm font-medium">
-                                Categories
+                                {{ t('Categories') }}
                             </legend>
                             <div class="grid grid-cols-2 gap-2">
                                 <label
@@ -342,7 +367,9 @@ const formAttributes = computed(() =>
                             />
                         </fieldset>
                         <div class="grid gap-2">
-                            <Label for="position">Order within level</Label>
+                            <Label for="position">{{
+                                t('Order within level')
+                            }}</Label>
                             <Input
                                 id="position"
                                 name="position"
@@ -370,6 +397,6 @@ const formAttributes = computed(() =>
         <QuizEditor :lesson-id="lesson.id" :questions="questions ?? []" />
     </section>
     <p v-else class="px-4 pb-6 text-sm text-muted-foreground md:px-6">
-        Save the lesson first to attach a video.
+        {{ t('Save the lesson first to attach a video.') }}
     </p>
 </template>

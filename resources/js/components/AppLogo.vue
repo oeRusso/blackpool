@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -12,8 +15,9 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
         <span class="truncate leading-tight font-bold tracking-tight"
             >Black<span class="text-primary">Pool</span></span
         >
-        <span class="truncate text-[11px] leading-tight text-muted-foreground"
-            >English, level by level</span
+        <span
+            class="truncate text-[11px] leading-tight text-muted-foreground"
+            >{{ t('English, level by level') }}</span
         >
     </div>
 </template>

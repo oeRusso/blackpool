@@ -4,6 +4,9 @@ import { ChevronLeft, ChevronRight } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import type { Paginated } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     paginator: Paginated<unknown>;
@@ -20,11 +23,16 @@ const next = computed(
     <nav
         v-if="paginator.last_page > 1 || paginator.total > 0"
         class="flex flex-col items-center justify-between gap-3 sm:flex-row"
-        aria-label="Pagination"
+        :aria-label="t('Pagination')"
     >
         <p class="text-sm text-muted-foreground">
-            Showing {{ paginator.from ?? 0 }}–{{ paginator.to ?? 0 }} of
-            {{ paginator.total }}
+            {{
+                t('Showing :from–:to of :total', {
+                    from: paginator.from ?? 0,
+                    to: paginator.to ?? 0,
+                    total: paginator.total,
+                })
+            }}
         </p>
         <div v-if="paginator.last_page > 1" class="flex items-center gap-1">
             <Button
@@ -37,7 +45,7 @@ const next = computed(
                     v-if="previous?.url"
                     :href="previous.url"
                     preserve-scroll
-                    aria-label="Previous page"
+                    :aria-label="t('Previous page')"
                 >
                     <ChevronLeft />
                 </Link>
@@ -69,7 +77,7 @@ const next = computed(
                     v-if="next?.url"
                     :href="next.url"
                     preserve-scroll
-                    aria-label="Next page"
+                    :aria-label="t('Next page')"
                 >
                     <ChevronRight />
                 </Link>

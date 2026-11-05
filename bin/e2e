@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 PORT="${E2E_PORT:-8010}"
 SERVER="blackpool-e2e-server"
 WORKER="blackpool-e2e-worker"
+SSR="blackpool-e2e-ssr"
 PW_VERSION="$(node -p "require('./node_modules/@playwright/test/package.json').version")"
 
 # E2E_BASE_URL=http://host:port runs the suite against an already running stack
@@ -18,7 +19,7 @@ if [ -n "${E2E_BASE_URL:-}" ]; then
     "mcr.microsoft.com/playwright:v${PW_VERSION}-noble" npx playwright test "$@"
 fi
 
-cleanup() { docker rm -f "$SERVER" "$WORKER" >/dev/null 2>&1 || true; }
+cleanup() { docker rm -f "$SERVER" "$WORKER" "$SSR" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 cleanup
 
@@ -33,11 +34,14 @@ fi
 grep -q '^MEDIA_CHUNK_SIZE=' .env.e2e || echo 'MEDIA_CHUNK_SIZE=1048576' >> .env.e2e
 grep -q '^MEDIA_ROOT=' .env.e2e || echo 'MEDIA_ROOT=/data/e2e-media' >> .env.e2e
 grep -q '^DEMO_MODE=' .env.e2e && sed -i 's/^DEMO_MODE=.*/DEMO_MODE=true/' .env.e2e || echo 'DEMO_MODE=true' >> .env.e2e
+# Fail loudly if a page cannot be server-rendered instead of silently falling back.
+grep -q '^INERTIA_SSR_THROW_ON_ERROR=' .env.e2e || echo 'INERTIA_SSR_THROW_ON_ERROR=true' >> .env.e2e
 
 # Small sample video used by the upload spec (generated once with ffmpeg).
 [ -f e2e/fixtures/sample.mp4 ] || bin/d ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=duration=6:size=1280x720:rate=25 \
   -f lavfi -i sine=frequency=440:duration=6 -shortest -c:v libx264 -b:v 3M -c:a aac -y e2e/fixtures/sample.mp4
 
+# Client assets + SSR bundle (bootstrap/ssr).
 [ "${E2E_SKIP_BUILD:-0}" = "1" ] || bin/d npm run build >/dev/null
 
 docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
@@ -49,12 +53,16 @@ docker run -d --name "$SERVER" -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2
   -v "$PWD":/app -v blackpool-data:/data -w /app --network host blackpool-dev \
   php artisan serve --host=127.0.0.1 --port="$PORT" --no-reload >/dev/null
 
+docker run -d --name "$SSR" -u "$(id -u):$(id -g)" -e HOME=/tmp \
+  -v "$PWD":/app -w /app --network host blackpool-dev \
+  node bootstrap/ssr/app.js >/dev/null
+
 docker run -d --name "$WORKER" -u "$(id -u):$(id -g)" -e HOME=/tmp -e APP_ENV=e2e \
   -v "$PWD":/app -v blackpool-data:/data -w /app --network host blackpool-dev \
   php artisan queue:work --queue=media,default --tries=2 --timeout=600 >/dev/null
 
 for _ in $(seq 1 60); do
-  curl -fs "http://127.0.0.1:${PORT}/up" >/dev/null && break
+  curl -fs "http://127.0.0.1:${PORT}/up" >/dev/null && curl -fs http://127.0.0.1:13714/health >/dev/null && break
   sleep 0.5
 done
 

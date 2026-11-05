@@ -22,6 +22,14 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
+     * Signed-in areas gain nothing from SSR (no crawlers, no SEO), so they skip
+     * the round trip to the Node server.
+     *
+     * @var array<int, string>
+     */
+    protected $withoutSsr = ['admin', 'admin/*', 'dashboard', 'settings/*'];
+
+    /**
      * Determines the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning
@@ -43,6 +51,9 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'appUrl' => rtrim((string) config('app.url'), '/'),
+            'locale' => app()->getLocale(),
+            'locales' => config('app.supported_locales'),
             'repositoryUrl' => config('app.repository_url'),
             'demo' => config('demo.enabled') ? [
                 'password' => config('demo.password'),

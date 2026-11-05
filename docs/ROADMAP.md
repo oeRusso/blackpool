@@ -409,24 +409,25 @@ Cada fase es una PR con su CI en verde.
 
 ## Estado de ejecución (2026-11-02)
 
-| Fase                | Estado | Notas y desviaciones respecto al plan                                                                                                                                                                 |
-| ------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 · Fundaciones     | ✅     | git, `CLAUDE.md`, Pint, Larastan 7, Pest 5, Vitest, CI. Sin PHP en el host: toolchain en Docker (`bin/d`).                                                                                            |
-| 1 · Stack moderno   | ✅     | Starter kit Laravel 13 + Inertia 3 + Vue/TS + Wayfinder; passkeys incluidas.                                                                                                                          |
-| 2 · Dominio y datos | ✅     | Portada y PDF guardados como rutas propias con conversión a WebP por GD, **sin spatie/medialibrary** (menos dependencias). Seeders idempotentes.                                                      |
-| 3 · Autorización    | ✅     | Policies + `can:access-admin`. **Sin `Gate::before`**, para que las reglas de negocio también apliquen a los admins.                                                                                  |
-| 4 · Backoffice      | ✅     | Tablas con componentes shadcn (no TanStack); filtros por query string; editor de quiz.                                                                                                                |
-| 5 · Vídeos          | ✅     | Protocolo de chunks propio en lugar de tus-php/Uppy; ffmpeg vía `Process` en lugar de pbmedia/laravel-ffmpeg; estado por **polling** (`usePoll`) en lugar de Reverb.                                  |
-| 6 · Área de alumno  | ✅     | Catálogo, lección, quiz, progreso y favoritos. Búsqueda con LIKE (sin Scout). Meta y Open Graph por página; **sin SSR ni sitemap** (pendiente).                                                       |
-| 7 · UI/UX           | ✅     | Marca, landing, páginas de error, modo oscuro, axe WCAG 2.1 AA en 12 páginas. **i18n ES/EN pendiente.**                                                                                               |
-| 8 · Calidad         | ✅     | 144 tests de Pest (96,9 % de cobertura, mínimo 90 % en CI), tests de arquitectura, 17 de Vitest, 62 de Playwright.                                                                                    |
-| 9 · DevOps          | ✅     | Docker multi-stage, Nginx con X-Accel-Redirect, CSP con nonce, backups a B2, Pulse y deploy por SSH. Stack de producción validado en local con Playwright. Sin Deployer ni Horizon (no hacían falta). |
-| 10 · Portfolio      | ✅     | README, ADRs, CHANGELOG, LICENSE, capturas automáticas, modo demo con reset nocturno.                                                                                                                 |
+| Fase                | Estado | Notas y desviaciones respecto al plan                                                                                                                                                                            |
+| ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 · Fundaciones     | ✅     | git, `CLAUDE.md`, Pint, Larastan 7, Pest 5, Vitest, CI. Sin PHP en el host: toolchain en Docker (`bin/d`).                                                                                                       |
+| 1 · Stack moderno   | ✅     | Starter kit Laravel 13 + Inertia 3 + Vue/TS + Wayfinder; passkeys incluidas.                                                                                                                                     |
+| 2 · Dominio y datos | ✅     | Portada y PDF guardados como rutas propias con conversión a WebP por GD, **sin spatie/medialibrary** (menos dependencias). Seeders idempotentes.                                                                 |
+| 3 · Autorización    | ✅     | Policies + `can:access-admin`. **Sin `Gate::before`**, para que las reglas de negocio también apliquen a los admins.                                                                                             |
+| 4 · Backoffice      | ✅     | Tablas con componentes shadcn (no TanStack); filtros por query string; editor de quiz.                                                                                                                           |
+| 5 · Vídeos          | ✅     | Protocolo de chunks propio en lugar de tus-php/Uppy; ffmpeg vía `Process` en lugar de pbmedia/laravel-ffmpeg; estado por **polling** (`usePoll`) en lugar de Reverb.                                             |
+| 6 · Área de alumno  | ✅     | Catálogo, lección, quiz, progreso y favoritos. Búsqueda con LIKE (sin Scout). **SSR** de las páginas públicas, canonical, Open Graph, JSON-LD, `sitemap.xml` propio (sin spatie/laravel-sitemap) y `robots.txt`. |
+| 7 · UI/UX           | ✅     | Marca, landing, páginas de error, modo oscuro, axe WCAG 2.1 AA en 12 páginas. **i18n ES/EN** con un `useI18n()` propio en lugar de laravel-vue-i18n (ADR 0005).                                                  |
+| 8 · Calidad         | ✅     | 144 tests de Pest (96,9 % de cobertura, mínimo 90 % en CI), tests de arquitectura, 17 de Vitest, 62 de Playwright.                                                                                               |
+| 9 · DevOps          | ✅     | Docker multi-stage, Nginx con X-Accel-Redirect, CSP con nonce, backups a B2, Pulse y deploy por SSH. Stack de producción validado en local con Playwright. Sin Deployer ni Horizon (no hacían falta).            |
+| 10 · Portfolio      | ✅     | README, ADRs, CHANGELOG, LICENSE, capturas automáticas, modo demo con reset nocturno.                                                                                                                            |
+
+**Actualización 2026-11-05: i18n y SEO.** Interfaz en inglés y español, SSR, sitemap y datos estructurados (ADR 0005). Tests: 162 de Pest, 25 de Vitest y 71 de Playwright.
 
 ### Próximos pasos sugeridos
 
 1. Desplegar en el VPS siguiendo `docs/DEPLOYMENT.md` y añadir la URL de la demo al README.
-2. i18n ES/EN de la parte pública y del área de alumno (`laravel-vue-i18n`).
-3. SSR de Inertia y `sitemap.xml` para SEO.
-4. Notificaciones en tiempo real con Laravel Reverb (sustituirían el polling).
-5. Mover el disco `media` a Backblaze B2 si el volumen de vídeo crece.
+2. Notificaciones en tiempo real con Laravel Reverb (sustituirían el polling).
+3. Mover el disco `media` a Backblaze B2 si el volumen de vídeo crece.
+4. URLs por idioma (`/es/...`) con `hreflang` si la interfaz en español tiene que posicionar por separado.

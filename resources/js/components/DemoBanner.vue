@@ -3,6 +3,9 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { FlaskConical } from '@lucide/vue';
 import { computed } from 'vue';
 import { login } from '@/routes';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const page = usePage();
 const demo = computed(() => page.props.demo);
@@ -17,12 +20,12 @@ const demo = computed(() => page.props.demo);
     >
         <FlaskConical class="size-3.5 shrink-0" />
         <span
-            >Public demo — content resets every night.
+            >{{ t('Public demo — content resets every night.') }}
             <Link
                 v-if="!page.props.auth.user"
                 :href="login()"
                 class="font-semibold underline underline-offset-2"
-                >Try it with a demo account</Link
+                >{{ t('Try it with a demo account') }}</Link
             ></span
         >
     </div>

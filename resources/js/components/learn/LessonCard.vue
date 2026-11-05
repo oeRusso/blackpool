@@ -7,6 +7,9 @@ import LevelBadge from '@/components/learn/LevelBadge.vue';
 import { formatDuration } from '@/lib/format';
 import { show } from '@/routes/lessons';
 import type { LessonCard } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ lesson: LessonCard; locked?: boolean }>();
 
@@ -53,19 +56,19 @@ const placeholderTone = computed(
                 <span
                     v-if="lesson.is_free"
                     class="rounded-md bg-background/90 px-2 py-0.5 text-xs font-semibold"
-                    >Free</span
+                    >{{ t('Free') }}</span
                 >
             </div>
             <span
                 v-if="lesson.completed"
                 class="absolute top-2 right-2 rounded-full bg-emerald-600 p-1 text-white"
-                aria-label="Completed"
+                :aria-label="t('Completed')"
                 ><CircleCheck class="size-4"
             /></span>
             <span
                 v-else-if="locked || !lesson.is_free"
                 class="absolute top-2 right-2 rounded-full bg-background/90 p-1"
-                aria-label="Premium lesson"
+                :aria-label="t('Premium lesson')"
                 ><Lock class="size-4"
             /></span>
         </div>
@@ -87,10 +90,10 @@ const placeholderTone = computed(
                     }}</span
                 >
                 <span v-if="lesson.has_video" class="flex items-center gap-1"
-                    ><PlayCircle class="size-3.5" /> Video</span
+                    ><PlayCircle class="size-3.5" /> {{ t('Video') }}</span
                 >
                 <span v-if="lesson.categories?.length" class="truncate">{{
-                    lesson.categories.join(' · ')
+                    lesson.categories.map((name) => t(name)).join(' · ')
                 }}</span>
             </div>
         </div>

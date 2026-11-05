@@ -2,6 +2,9 @@
 import type { HTMLAttributes } from "vue"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "./utils"
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   class?: HTMLAttributes["class"]
@@ -14,7 +17,7 @@ const { toggleSidebar } = useSidebar()
   <button
     data-sidebar="rail"
     data-slot="sidebar-rail"
-    aria-label="Toggle Sidebar"
+    :aria-label="t('Toggle sidebar')"
     :tabindex="-1"
     title="Toggle Sidebar"
     :class="cn(

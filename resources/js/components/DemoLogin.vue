@@ -4,13 +4,16 @@ import { GraduationCap, PenLine, ShieldCheck, Sparkles } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { store } from '@/routes/login';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const page = usePage();
 const demo = computed(() => page.props.demo);
 const loading = ref<string | null>(null);
 
 const roles = [
-    { role: 'admin', label: 'Admin', icon: ShieldCheck },
+    { role: 'admin', label: 'Administrator', icon: ShieldCheck },
     { role: 'editor', label: 'Editor', icon: PenLine },
     { role: 'premium', label: 'Premium', icon: Sparkles },
     { role: 'student', label: 'Student', icon: GraduationCap },
@@ -40,7 +43,9 @@ function loginAs(role: string): void {
         class="space-y-3 rounded-lg border border-dashed p-4"
         data-test="demo-login"
     >
-        <p class="text-center text-sm font-medium">One-click demo login</p>
+        <p class="text-center text-sm font-medium">
+            {{ t('One-click demo login') }}
+        </p>
         <div class="grid grid-cols-2 gap-2">
             <Button
                 v-for="item in roles"
@@ -52,11 +57,11 @@ function loginAs(role: string): void {
                 :data-test="`demo-login-${item.role}`"
                 @click="loginAs(item.role)"
             >
-                <component :is="item.icon" /> {{ item.label }}
+                <component :is="item.icon" /> {{ t(item.label) }}
             </Button>
         </div>
         <p class="text-center text-xs text-muted-foreground">
-            Password for every demo account:
+            {{ t('Password for every demo account:') }}
             <code class="font-mono">{{ demo.password }}</code>
         </p>
     </div>

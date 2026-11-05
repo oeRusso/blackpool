@@ -16,10 +16,15 @@ return [
     */
 
     'ssr' => [
-        'enabled' => true,
-        'url' => 'http://127.0.0.1:13714',
-        // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
-
+        // Public pages (landing, catalog, lessons, auth) are pre-rendered by the
+        // Node SSR server so crawlers and first paint get real HTML. If the SSR
+        // server is down, Inertia silently falls back to client-side rendering.
+        'enabled' => (bool) env('INERTIA_SSR_ENABLED', true),
+        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
+        'timeout' => (int) env('INERTIA_SSR_TIMEOUT', 3),
+        // In Docker the bundle lives in the separate `ssr` container.
+        'ensure_bundle_exists' => (bool) env('INERTIA_SSR_ENSURE_BUNDLE_EXISTS', true),
+        'throw_on_error' => (bool) env('INERTIA_SSR_THROW_ON_ERROR', false),
     ],
 
     /*

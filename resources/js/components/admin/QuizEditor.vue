@@ -15,6 +15,9 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 type Question = {
     id: number;
@@ -80,12 +83,13 @@ function destroy(question: Question): void {
     <Card data-test="quiz-editor">
         <CardHeader>
             <CardTitle class="flex items-center gap-2"
-                ><ListChecks class="size-5" /> Quiz</CardTitle
+                ><ListChecks class="size-5" /> {{ t('Quiz') }}</CardTitle
             >
-            <CardDescription
-                >Multiple-choice questions shown at the end of the lesson.
-                Students pass with 70%.</CardDescription
-            >
+            <CardDescription>{{
+                t(
+                    'Multiple-choice questions shown at the end of the lesson. Students pass with 70%.',
+                )
+            }}</CardDescription>
         </CardHeader>
         <CardContent class="space-y-6">
             <ol v-if="questions.length" class="space-y-3">
@@ -100,16 +104,22 @@ function destroy(question: Question): void {
                             {{ index + 1 }}. {{ question.prompt }}
                         </p>
                         <ConfirmDialog
-                            title="Delete this question?"
-                            description="Previous attempts keep their score."
-                            confirm-label="Delete"
+                            :title="t('Delete this question?')"
+                            :description="
+                                t('Previous attempts keep their score.')
+                            "
+                            :confirm-label="t('Delete')"
                             @confirm="destroy(question)"
                         >
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 class="text-destructive"
-                                :aria-label="`Delete question ${index + 1}`"
+                                :aria-label="
+                                    t('Delete question :number', {
+                                        number: index + 1,
+                                    })
+                                "
                                 ><Trash2
                             /></Button>
                         </ConfirmDialog>
@@ -134,27 +144,27 @@ function destroy(question: Question): void {
                 </li>
             </ol>
             <p v-else class="text-sm text-muted-foreground">
-                No questions yet.
+                {{ t('No questions yet.') }}
             </p>
 
             <form
                 class="space-y-3 rounded-lg border border-dashed p-4"
                 @submit.prevent="save"
             >
-                <p class="text-sm font-medium">New question</p>
+                <p class="text-sm font-medium">{{ t('New question') }}</p>
                 <div class="grid gap-2">
-                    <Label for="question-prompt">Question</Label>
+                    <Label for="question-prompt">{{ t('Question') }}</Label>
                     <Input
                         id="question-prompt"
                         v-model="draft.prompt"
-                        placeholder="She ___ a teacher."
+                        :placeholder="t('She ___ a teacher.')"
                         required
                     />
                     <InputError :message="errors.prompt" />
                 </div>
                 <fieldset class="grid gap-2">
                     <legend class="mb-1 text-sm">
-                        Options (select the correct one)
+                        {{ t('Options (select the correct one)') }}
                     </legend>
                     <div
                         v-for="(_, index) in draft.options"
@@ -167,12 +177,20 @@ function destroy(question: Question): void {
                             name="correct-option"
                             :value="index"
                             class="accent-primary"
-                            :aria-label="`Option ${index + 1} is correct`"
+                            :aria-label="
+                                t('Option :number is correct', {
+                                    number: index + 1,
+                                })
+                            "
                         />
                         <Input
                             v-model="draft.options[index]"
-                            :placeholder="`Option ${index + 1}`"
-                            :aria-label="`Option ${index + 1}`"
+                            :placeholder="
+                                t('Option :number', { number: index + 1 })
+                            "
+                            :aria-label="
+                                t('Option :number', { number: index + 1 })
+                            "
                             required
                         />
                         <Button
@@ -180,7 +198,11 @@ function destroy(question: Question): void {
                             variant="ghost"
                             size="icon"
                             :disabled="draft.options.length <= 2"
-                            :aria-label="`Remove option ${index + 1}`"
+                            :aria-label="
+                                t('Remove option :number', {
+                                    number: index + 1,
+                                })
+                            "
                             @click="removeOption(index)"
                             ><X
                         /></Button>
@@ -200,13 +222,13 @@ function destroy(question: Question): void {
                         class="justify-self-start"
                         :disabled="draft.options.length >= 5"
                         @click="addOption"
-                        ><Plus /> Add option</Button
+                        ><Plus /> {{ t('Add option') }}</Button
                     >
                 </fieldset>
                 <div class="grid gap-2">
-                    <Label for="question-explanation"
-                        >Explanation (shown after answering)</Label
-                    >
+                    <Label for="question-explanation">{{
+                        t('Explanation (shown after answering)')
+                    }}</Label>
                     <Input
                         id="question-explanation"
                         v-model="draft.explanation"
@@ -216,7 +238,7 @@ function destroy(question: Question): void {
                     type="submit"
                     :disabled="saving"
                     data-test="add-question"
-                    >Add question</Button
+                    >{{ t('Add question') }}</Button
                 >
             </form>
         </CardContent>

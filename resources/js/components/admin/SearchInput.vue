@@ -2,12 +2,15 @@
 import { Search } from '@lucide/vue';
 import { useDebounceFn } from '@vueuse/core';
 import { Input } from '@/components/ui/input';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const model = defineModel<string>({ default: '' });
 
 const props = withDefaults(
     defineProps<{ placeholder?: string; delay?: number }>(),
-    { placeholder: 'Search…', delay: 300 },
+    { placeholder: undefined, delay: 300 },
 );
 
 const emit = defineEmits<{ search: [value: string] }>();
@@ -26,8 +29,8 @@ const emitSearch = useDebounceFn(
         <Input
             v-model="model"
             type="search"
-            :placeholder="placeholder"
-            :aria-label="placeholder"
+            :placeholder="placeholder ?? t('Search…')"
+            :aria-label="placeholder ?? t('Search…')"
             class="pl-8"
             @update:model-value="emitSearch(String($event))"
         />

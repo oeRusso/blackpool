@@ -4,7 +4,10 @@ import { defineComponent, h } from 'vue';
 import LessonCard from '@/components/learn/LessonCard.vue';
 import type { LessonCard as LessonCardType } from '@/types';
 
+const page = { props: { locale: 'en' } };
+
 vi.mock('@inertiajs/vue3', () => ({
+    usePage: () => page,
     Link: defineComponent({
         props: ['href'],
         setup:
@@ -74,5 +77,20 @@ describe('LessonCard', () => {
                 .find('[aria-label="Completed"]')
                 .exists(),
         ).toBe(true);
+    });
+
+    it('renders the interface in the visitor language', () => {
+        page.props.locale = 'es';
+
+        const wrapper = mount(LessonCard, {
+            props: { lesson: lesson({ is_free: false }) },
+        });
+
+        expect(wrapper.text()).toContain('Gramática');
+        expect(wrapper.find('[aria-label="Lección premium"]').exists()).toBe(
+            true,
+        );
+
+        page.props.locale = 'en';
     });
 });

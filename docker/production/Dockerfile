@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
-# Production image for BlackPool: PHP-FPM 8.4 + ffmpeg, built assets and an
-# Nginx image that serves /public and streams protected media.
+# Production image for BlackPool: PHP-FPM 8.4 + ffmpeg, built assets, a Node
+# SSR server and an Nginx image that serves /public and streams protected media.
 
 FROM php:8.4-fpm-bookworm AS base
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
@@ -30,6 +30,8 @@ RUN composer dump-autoload --no-dev --no-interaction \
     && cp .env.example .env && php artisan key:generate --force \
     && npm run build \
     && rm .env
+# ^ builds the client assets (public/build) and the self-contained SSR bundle
+#   (bootstrap/ssr), which the `ssr` stage below runs without node_modules.
 
 # ---- Application (php-fpm, queue worker and scheduler) -------------------
 FROM base AS app
@@ -45,6 +47,15 @@ COPY --chmod=755 docker/production/entrypoint.sh /usr/local/bin/entrypoint
 USER www-data
 ENTRYPOINT ["entrypoint"]
 CMD ["php-fpm"]
+
+# ---- Inertia SSR server (Node) ---------------------------------------------
+FROM node:24-alpine AS ssr
+WORKDIR /app
+COPY --from=assets /var/www/html/bootstrap/ssr ./bootstrap/ssr
+RUN echo '{"type":"module","private":true}' > package.json
+USER node
+EXPOSE 13714
+CMD ["node", "bootstrap/ssr/app.js"]
 
 # ---- Nginx -----------------------------------------------------------------
 FROM nginx:1.27-alpine AS web

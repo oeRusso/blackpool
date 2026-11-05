@@ -16,6 +16,9 @@ import { formatDate } from '@/lib/format';
 import { dashboard } from '@/routes/admin';
 import { create, edit } from '@/routes/admin/lessons';
 import type { LessonStatus } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps<{
     stats: {
@@ -43,12 +46,42 @@ defineOptions({
 });
 
 const tiles = computed(() => [
-    { label: 'Lessons', value: props.stats.lessons, icon: BookOpen },
-    { label: 'Published', value: props.stats.published, icon: SquareCheckBig },
-    { label: 'Drafts', value: props.stats.drafts, icon: FilePen },
-    { label: 'Categories', value: props.stats.categories, icon: FolderTree },
-    { label: 'Students', value: props.stats.students, icon: GraduationCap },
-    { label: 'Premium', value: props.stats.premium, icon: Sparkles },
+    {
+        key: 'lessons',
+        label: t('Lessons'),
+        value: props.stats.lessons,
+        icon: BookOpen,
+    },
+    {
+        key: 'published',
+        label: t('Published'),
+        value: props.stats.published,
+        icon: SquareCheckBig,
+    },
+    {
+        key: 'drafts',
+        label: t('Drafts'),
+        value: props.stats.drafts,
+        icon: FilePen,
+    },
+    {
+        key: 'categories',
+        label: t('Categories'),
+        value: props.stats.categories,
+        icon: FolderTree,
+    },
+    {
+        key: 'students',
+        label: t('Students'),
+        value: props.stats.students,
+        icon: GraduationCap,
+    },
+    {
+        key: 'premium',
+        label: t('Premium'),
+        value: props.stats.premium,
+        icon: Sparkles,
+    },
 ]);
 
 const maxPerLevel = computed(() =>
@@ -57,23 +90,25 @@ const maxPerLevel = computed(() =>
 </script>
 
 <template>
-    <Head title="Admin dashboard" />
+    <Head :title="t('Admin dashboard')" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <div class="flex items-end justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight">Overview</h1>
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    {{ t('Overview') }}
+                </h1>
                 <p class="text-sm text-muted-foreground">
-                    Content and learners at a glance.
+                    {{ t('Content and learners at a glance.') }}
                 </p>
             </div>
             <Button as-child>
-                <Link :href="create()">New lesson</Link>
+                <Link :href="create()">{{ t('New lesson') }}</Link>
             </Button>
         </div>
 
         <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-            <Card v-for="tile in tiles" :key="tile.label" class="gap-2 py-4">
+            <Card v-for="tile in tiles" :key="tile.key" class="gap-2 py-4">
                 <CardHeader
                     class="flex flex-row items-center justify-between px-4"
                 >
@@ -90,7 +125,7 @@ const maxPerLevel = computed(() =>
                 <CardContent class="px-4">
                     <p
                         class="text-3xl font-semibold tabular-nums"
-                        :data-test="`stat-${tile.label.toLowerCase()}`"
+                        :data-test="`stat-${tile.key}`"
                     >
                         {{ tile.value }}
                     </p>
@@ -101,7 +136,7 @@ const maxPerLevel = computed(() =>
         <div class="grid gap-4 lg:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Lessons per CEFR level</CardTitle>
+                    <CardTitle>{{ t('Lessons per CEFR level') }}</CardTitle>
                 </CardHeader>
                 <CardContent class="space-y-3">
                     <div
@@ -129,7 +164,7 @@ const maxPerLevel = computed(() =>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Recently updated</CardTitle>
+                    <CardTitle>{{ t('Recently updated') }}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <ul class="divide-y">
@@ -146,7 +181,7 @@ const maxPerLevel = computed(() =>
                                 >
                                 <p class="text-xs text-muted-foreground">
                                     {{ lesson.level }} ·
-                                    {{ formatDate(lesson.updated_at) }}
+                                    {{ formatDate(lesson.updated_at, locale) }}
                                 </p>
                             </div>
                             <StatusBadge :status="lesson.status" />

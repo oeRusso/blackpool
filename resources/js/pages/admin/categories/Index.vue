@@ -32,6 +32,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes/admin';
 import { index } from '@/routes/admin/categories';
 import type { Category, Paginated } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     categories: Paginated<Category>;
@@ -77,21 +80,21 @@ function destroy(category: Category): void {
 </script>
 
 <template>
-    <Head title="Categories" />
+    <Head :title="t('Categories')" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <PageHeader
-            title="Categories"
-            description="Group lessons by skill or topic."
+            :title="t('Categories')"
+            :description="t('Group lessons by skill or topic.')"
         >
             <template #actions>
                 <SearchInput
                     v-model="search"
-                    placeholder="Search categories…"
+                    :placeholder="t('Search categories…')"
                     @search="onSearch"
                 />
                 <Button data-test="create-category" @click="openCreate">
-                    <Plus /> New category
+                    <Plus /> {{ t('New category') }}
                 </Button>
             </template>
         </PageHeader>
@@ -99,21 +102,27 @@ function destroy(category: Category): void {
         <EmptyState
             v-if="categories.data.length === 0"
             :icon="FolderTree"
-            title="No categories found"
-            description="Create your first category to start organising lessons."
+            :title="t('No categories found')"
+            :description="
+                t('Create your first category to start organising lessons.')
+            "
         />
 
         <div v-else class="overflow-hidden rounded-xl border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead class="hidden md:table-cell"
-                            >Description</TableHead
-                        >
-                        <TableHead class="text-right">Lessons</TableHead>
+                        <TableHead>{{ t('Name') }}</TableHead>
+                        <TableHead class="hidden md:table-cell">{{
+                            t('Description')
+                        }}</TableHead>
+                        <TableHead class="text-right">{{
+                            t('Lessons')
+                        }}</TableHead>
                         <TableHead class="w-24 text-right"
-                            ><span class="sr-only">Actions</span></TableHead
+                            ><span class="sr-only">{{
+                                t('Actions')
+                            }}</span></TableHead
                         >
                     </TableRow>
                 </TableHeader>
@@ -138,22 +147,36 @@ function destroy(category: Category): void {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    :aria-label="`Edit ${category.name}`"
+                                    :aria-label="
+                                        t('Edit :name', { name: category.name })
+                                    "
                                     @click="openEdit(category)"
                                 >
                                     <Pencil />
                                 </Button>
                                 <ConfirmDialog
-                                    :title="`Delete “${category.name}”?`"
-                                    description="This cannot be undone. Categories that still have lessons cannot be deleted."
-                                    confirm-label="Delete"
+                                    :title="
+                                        t('Delete “:name”?', {
+                                            name: category.name,
+                                        })
+                                    "
+                                    :description="
+                                        t(
+                                            'This cannot be undone. Categories that still have lessons cannot be deleted.',
+                                        )
+                                    "
+                                    :confirm-label="t('Delete')"
                                     @confirm="destroy(category)"
                                 >
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         class="text-destructive"
-                                        :aria-label="`Delete ${category.name}`"
+                                        :aria-label="
+                                            t('Delete :name', {
+                                                name: category.name,
+                                            })
+                                        "
                                     >
                                         <Trash2 />
                                     </Button>
@@ -184,14 +207,14 @@ function destroy(category: Category): void {
             >
                 <DialogHeader>
                     <DialogTitle>{{
-                        editing ? 'Edit category' : 'New category'
+                        editing ? t('Edit category') : t('New category')
                     }}</DialogTitle>
-                    <DialogDescription
-                        >Category names must be unique.</DialogDescription
-                    >
+                    <DialogDescription>{{
+                        t('Category names must be unique.')
+                    }}</DialogDescription>
                 </DialogHeader>
                 <div class="grid gap-2">
-                    <Label for="category-name">Name</Label>
+                    <Label for="category-name">{{ t('Name') }}</Label>
                     <Input
                         id="category-name"
                         name="name"
@@ -202,7 +225,9 @@ function destroy(category: Category): void {
                     <InputError :message="errors.name" />
                 </div>
                 <div class="grid gap-2">
-                    <Label for="category-description">Description</Label>
+                    <Label for="category-description">{{
+                        t('Description')
+                    }}</Label>
                     <Textarea
                         id="category-description"
                         name="description"
@@ -217,7 +242,7 @@ function destroy(category: Category): void {
                         type="submit"
                         :disabled="processing"
                         data-test="save-category"
-                        >Save</Button
+                        >{{ t('Save') }}</Button
                     >
                 </DialogFooter>
             </Form>

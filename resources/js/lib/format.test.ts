@@ -18,7 +18,8 @@ describe('formatDate', () => {
         expect(formatDate(null)).toBe('—');
     });
 
-    it('formats ISO dates', () => {
-        expect(formatDate('2026-11-02T10:00:00Z')).toMatch(/2026/);
+    it('formats ISO dates in the given locale and in UTC', () => {
+        expect(formatDate('2026-11-02T23:30:00Z')).toBe('Nov 2, 2026');
+        expect(formatDate('2026-11-02T23:30:00Z', 'es')).toBe('2 nov 2026');
     });
 });

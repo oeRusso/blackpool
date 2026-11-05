@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -49,6 +50,8 @@ class Lesson extends Model
     /** @use HasFactory<LessonFactory> */
     use HasFactory, SoftDeletes;
 
+    public const SITEMAP_CACHE_KEY = 'seo.sitemap';
+
     protected static function booted(): void
     {
         static::creating(function (Lesson $lesson): void {
@@ -56,6 +59,12 @@ class Lesson extends Model
                 $lesson->slug = static::uniqueSlug($lesson->title);
             }
         });
+
+        // Keep the sitemap in step with publishing, edits and deletions.
+        $forgetSitemap = fn () => Cache::forget(self::SITEMAP_CACHE_KEY);
+        static::saved($forgetSitemap);
+        static::deleted($forgetSitemap);
+        static::restored($forgetSitemap);
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string

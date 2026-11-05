@@ -17,6 +17,9 @@ import {
 import { dashboard } from '@/routes/admin';
 import { index } from '@/routes/admin/roles';
 import type { AdminRole, Option } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     roles: AdminRole[];
@@ -48,12 +51,16 @@ function save(role: AdminRole): void {
 </script>
 
 <template>
-    <Head title="Roles & permissions" />
+    <Head :title="t('Roles & permissions')" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <PageHeader
-            title="Roles & permissions"
-            description="Decide what each role can do. The administrator role always has every permission."
+            :title="t('Roles & permissions')"
+            :description="
+                t(
+                    'Decide what each role can do. The administrator role always has every permission.',
+                )
+            "
         />
 
         <div class="grid gap-4 md:grid-cols-2">
@@ -71,9 +78,9 @@ function save(role: AdminRole): void {
                         />
                     </CardTitle>
                     <CardDescription>
-                        <Badge variant="secondary"
-                            >{{ role.users_count }} users</Badge
-                        >
+                        <Badge variant="secondary">{{
+                            t(':count users', { count: role.users_count })
+                        }}</Badge>
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="grid gap-2">
@@ -97,7 +104,7 @@ function save(role: AdminRole): void {
                         size="sm"
                         :data-test="`save-role-${role.name}`"
                         @click="save(role)"
-                        >Save</Button
+                        >{{ t('Save') }}</Button
                     >
                 </CardFooter>
             </Card>

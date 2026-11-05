@@ -48,6 +48,11 @@ Playwright runs in the official `mcr.microsoft.com/playwright` image. Use the sa
 - **Domain logic:** controllers stay thin and logic lives in `app/Actions` (`SaveLesson`, `GradeQuiz`, `UpdateLessonProgress`) and `app/Services/Video`.
 - **Video:** browser → `ChunkedUploadManager` (raw `PUT` chunks) → `ProcessUploadedVideo` job on the `media` queue (`HlsTranscoder`: ffprobe, thumbnail, HLS 360p/720p) → `VideoStreamController`, which authorizes every segment and uses `X-Accel-Redirect` when `MEDIA_ACCEL_REDIRECT_PREFIX` is set. Embeds go through `EmbedResolver` (oEmbed).
 - **Frontend:** Inertia pages live in `resources/js/pages` (`learn/*`, `admin/*`, `auth/*`, `settings/*`). The layout is chosen in `resources/js/app.ts`: `learn/`, `Welcome` and `Error` use `PublicLayout`. Routes are typed with Wayfinder: `@/routes/...` and `@/actions/...`. The generated files are gitignored.
+- **i18n and SSR:**
+    - UI strings are English keys translated with `useI18n().t()` (`resources/js/lib/i18n.ts`) on the frontend and `__()` on the backend.
+    - Spanish lives in `lang/es.json`. Tests fail if a key is missing, so add the translation with every new string.
+    - `SetLocale` resolves the language from the account, then the cookie, then `Accept-Language`.
+    - Public pages are server-rendered by the Node SSR bundle (`bootstrap/ssr/app.js`, built by `npm run build`). Code that runs during render must not touch `window` or `document`, and must not depend on the timezone.
 - **Security:** `SecurityHeaders` sets a nonce-based CSP; inline scripts need `nonce="{{ Vite::cspNonce() }}"`, and new third-party origins must be added to the policy. With `DEMO_MODE=true`, `ProtectDemoAccounts` stops the shared demo accounts from changing their credentials, and `demo:reset` runs nightly.
 
 ## Conventions

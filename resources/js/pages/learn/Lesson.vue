@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     ArrowRight,
@@ -14,6 +14,7 @@ import { computed, ref } from 'vue';
 import LessonCard from '@/components/learn/LessonCard.vue';
 import LevelBadge from '@/components/learn/LevelBadge.vue';
 import QuizCard from '@/components/learn/QuizCard.vue';
+import SeoHead from '@/components/SeoHead.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import VideoPlayer from '@/components/VideoPlayer.vue';
@@ -29,6 +30,9 @@ import {
     worksheet,
 } from '@/routes/lessons';
 import type { LessonCard as LessonCardType, LessonVideo, Quiz } from '@/types';
+import { useI18n } from '@/lib/i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps<{
     lesson: {
@@ -94,25 +98,27 @@ function onProgress(seconds: number): void {
 </script>
 
 <template>
-    <Head :title="lesson.title">
-        <meta name="description" :content="lesson.summary" />
-        <meta property="og:title" :content="lesson.title" />
-        <meta property="og:description" :content="lesson.summary" />
-        <meta
-            v-if="lesson.cover_url"
-            property="og:image"
-            :content="lesson.cover_url"
-        />
-    </Head>
+    <SeoHead
+        :title="lesson.title"
+        :description="lesson.summary"
+        :image="lesson.cover_url"
+        :path="show.url(lesson.slug)"
+        type="article"
+    />
 
     <article class="mx-auto max-w-6xl px-4 py-8">
-        <nav class="mb-4 text-sm text-muted-foreground" aria-label="Breadcrumb">
-            <Link :href="catalog()" class="hover:text-foreground">Lessons</Link>
+        <nav
+            class="mb-4 text-sm text-muted-foreground"
+            :aria-label="t('Breadcrumb')"
+        >
+            <Link :href="catalog()" class="hover:text-foreground">{{
+                t('Lessons')
+            }}</Link>
             <span class="mx-2">/</span>
             <Link
                 :href="catalog({ query: { level: lesson.level.code } })"
                 class="hover:text-foreground"
-                >{{ lesson.level.code }} · {{ lesson.level.name }}</Link
+                >{{ lesson.level.code }} · {{ t(lesson.level.name) }}</Link
             >
         </nav>
 
@@ -121,20 +127,23 @@ function onProgress(seconds: number): void {
                 <header class="space-y-3">
                     <div class="flex flex-wrap items-center gap-2">
                         <LevelBadge :code="lesson.level.code" />
-                        <Badge v-if="lesson.is_free" variant="outline"
-                            >Free</Badge
-                        >
+                        <Badge v-if="lesson.is_free" variant="outline">{{
+                            t('Free')
+                        }}</Badge>
                         <Badge v-else variant="secondary"
-                            ><Sparkles /> Premium</Badge
+                            ><Sparkles /> {{ t('Premium') }}</Badge
                         >
-                        <Badge v-if="!lesson.is_published" variant="destructive"
-                            >Draft preview</Badge
+                        <Badge
+                            v-if="!lesson.is_published"
+                            variant="destructive"
+                            >{{ t('Draft preview') }}</Badge
                         >
                         <span
                             v-if="progress.completed"
                             class="flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400"
                             data-test="completed-badge"
-                            ><CircleCheck class="size-4" /> Completed</span
+                            ><CircleCheck class="size-4" />
+                            {{ t('Completed') }}</span
                         >
                     </div>
                     <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
@@ -171,12 +180,18 @@ function onProgress(seconds: number): void {
                             v-if="access.requiresAccount"
                             class="text-sm text-foreground/80"
                         >
-                            Registration is free and gives you access to every
-                            free lesson.
+                            {{
+                                t(
+                                    'Registration is free and gives you access to every free lesson.',
+                                )
+                            }}
                         </p>
                         <p v-else class="text-sm text-foreground/80">
-                            Premium members get every lesson, worksheet and
-                            quiz.
+                            {{
+                                t(
+                                    'Premium members get every lesson, worksheet and quiz.',
+                                )
+                            }}
                         </p>
                     </div>
                     <div
@@ -184,12 +199,14 @@ function onProgress(seconds: number): void {
                         class="relative flex gap-2"
                     >
                         <Button as-child
-                            ><Link :href="register()"
-                                >Create free account</Link
-                            ></Button
+                            ><Link :href="register()">{{
+                                t('Create free account')
+                            }}</Link></Button
                         >
                         <Button variant="outline" as-child
-                            ><Link :href="login()">Log in</Link></Button
+                            ><Link :href="login()">{{
+                                t('Log in')
+                            }}</Link></Button
                         >
                     </div>
                 </div>
@@ -198,7 +215,9 @@ function onProgress(seconds: number): void {
                     v-if="paragraphs.length"
                     class="space-y-4 leading-relaxed"
                 >
-                    <h2 class="text-xl font-semibold">Lesson notes</h2>
+                    <h2 class="text-xl font-semibold">
+                        {{ t('Lesson notes') }}
+                    </h2>
                     <p
                         v-for="(paragraph, index) in paragraphs"
                         :key="index"
@@ -215,14 +234,18 @@ function onProgress(seconds: number): void {
                 <div class="space-y-3 rounded-xl border p-4">
                     <dl class="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                            <dt class="text-muted-foreground">Level</dt>
+                            <dt class="text-muted-foreground">
+                                {{ t('Level') }}
+                            </dt>
                             <dd class="font-medium">
                                 {{ lesson.level.code }} ·
-                                {{ lesson.level.name }}
+                                {{ t(lesson.level.name) }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-muted-foreground">Duration</dt>
+                            <dt class="text-muted-foreground">
+                                {{ t('Duration') }}
+                            </dt>
                             <dd class="flex items-center gap-1 font-medium">
                                 <Clock class="size-3.5" />{{
                                     formatDuration(lesson.duration_seconds)
@@ -230,7 +253,9 @@ function onProgress(seconds: number): void {
                             </dd>
                         </div>
                         <div class="col-span-2">
-                            <dt class="text-muted-foreground">Topics</dt>
+                            <dt class="text-muted-foreground">
+                                {{ t('Topics') }}
+                            </dt>
                             <dd class="mt-1 flex flex-wrap gap-1">
                                 <Link
                                     v-for="category in lesson.categories"
@@ -242,7 +267,7 @@ function onProgress(seconds: number): void {
                                     "
                                 >
                                     <Badge variant="outline">{{
-                                        category.name
+                                        t(category.name)
                                     }}</Badge>
                                 </Link>
                             </dd>
@@ -252,10 +277,22 @@ function onProgress(seconds: number): void {
                         v-if="lesson.published_at"
                         class="text-xs text-muted-foreground"
                     >
-                        Published {{ formatDate(lesson.published_at)
-                        }}<span v-if="lesson.author">
-                            by {{ lesson.author }}</span
-                        >
+                        {{
+                            lesson.author
+                                ? t('Published :date by :author', {
+                                      date: formatDate(
+                                          lesson.published_at,
+                                          locale,
+                                      ),
+                                      author: lesson.author,
+                                  })
+                                : t('Published :date', {
+                                      date: formatDate(
+                                          lesson.published_at,
+                                          locale,
+                                      ),
+                                  })
+                        }}
                     </p>
 
                     <div v-if="user" class="grid gap-2">
@@ -271,8 +308,8 @@ function onProgress(seconds: number): void {
                             <CircleCheck />
                             {{
                                 progress.completed
-                                    ? 'Mark as not completed'
-                                    : 'Mark as completed'
+                                    ? t('Mark as not completed')
+                                    : t('Mark as completed')
                             }}
                         </Button>
                         <Button
@@ -289,7 +326,11 @@ function onProgress(seconds: number): void {
                                         : ''
                                 "
                             />
-                            {{ progress.favorite ? 'Saved' : 'Save for later' }}
+                            {{
+                                progress.favorite
+                                    ? t('Saved')
+                                    : t('Save for later')
+                            }}
                         </Button>
                         <Button
                             v-if="lesson.has_pdf && access.canWatch"
@@ -299,7 +340,8 @@ function onProgress(seconds: number): void {
                             <a
                                 :href="worksheet.url(lesson.slug)"
                                 data-test="download-worksheet"
-                                ><Download /> Download worksheet (PDF)</a
+                                ><Download />
+                                {{ t('Download worksheet (PDF)') }}</a
                             >
                         </Button>
                     </div>
@@ -310,8 +352,13 @@ function onProgress(seconds: number): void {
                     class="space-y-2 rounded-xl border p-4 text-sm"
                 >
                     <p class="text-muted-foreground">
-                        Lesson {{ navigation.position }} of
-                        {{ navigation.total }} in {{ lesson.level.code }}
+                        {{
+                            t('Lesson :position of :total in :level', {
+                                position: navigation.position ?? '—',
+                                total: navigation.total,
+                                level: lesson.level.code,
+                            })
+                        }}
                     </p>
                     <Link
                         v-if="navigation.previous"
@@ -334,7 +381,7 @@ function onProgress(seconds: number): void {
         </div>
 
         <section v-if="related.length" class="mt-12 space-y-4">
-            <h2 class="text-xl font-semibold">Related lessons</h2>
+            <h2 class="text-xl font-semibold">{{ t('Related lessons') }}</h2>
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 <LessonCard
                     v-for="item in related"

@@ -4,6 +4,9 @@ import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { home } from '@/routes';
 import { index as catalog } from '@/routes/lessons';
+import { useI18n } from '@/lib/i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ status: number }>();
 
@@ -11,32 +14,36 @@ const content = computed(
     () =>
         ({
             403: {
-                title: 'Access denied',
-                text: 'You do not have permission to view this page.',
+                title: t('Access denied'),
+                text: t('You do not have permission to view this page.'),
             },
             404: {
-                title: 'Page not found',
-                text: 'The page you are looking for does not exist or has moved.',
+                title: t('Page not found'),
+                text: t(
+                    'The page you are looking for does not exist or has moved.',
+                ),
             },
             419: {
-                title: 'Page expired',
-                text: 'Your session expired. Please refresh and try again.',
+                title: t('Page expired'),
+                text: t('Your session expired. Please refresh and try again.'),
             },
             429: {
-                title: 'Too many requests',
-                text: 'Please slow down and try again in a minute.',
+                title: t('Too many requests'),
+                text: t('Please slow down and try again in a minute.'),
             },
             500: {
-                title: 'Something went wrong',
-                text: 'An unexpected error occurred. We have been notified.',
+                title: t('Something went wrong'),
+                text: t('An unexpected error occurred. We have been notified.'),
             },
             503: {
-                title: 'Back soon',
-                text: 'We are performing maintenance. Please check back shortly.',
+                title: t('Back soon'),
+                text: t(
+                    'We are performing maintenance. Please check back shortly.',
+                ),
             },
         })[props.status] ?? {
-            title: 'Error',
-            text: 'An unexpected error occurred.',
+            title: t('Error'),
+            text: t('An unexpected error occurred.'),
         },
 );
 </script>
@@ -51,9 +58,13 @@ const content = computed(
         <h1 class="text-2xl font-bold">{{ content.title }}</h1>
         <p class="text-muted-foreground">{{ content.text }}</p>
         <div class="flex gap-2">
-            <Button as-child><Link :href="home()">Go home</Link></Button>
+            <Button as-child
+                ><Link :href="home()">{{ t('Go home') }}</Link></Button
+            >
             <Button variant="outline" as-child
-                ><Link :href="catalog()">Browse lessons</Link></Button
+                ><Link :href="catalog()">{{
+                    t('Browse lessons')
+                }}</Link></Button
             >
         </div>
     </section>

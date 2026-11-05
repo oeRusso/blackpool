@@ -5,10 +5,17 @@ use App\Http\Controllers\Learning\CatalogController;
 use App\Http\Controllers\Learning\DashboardController;
 use App\Http\Controllers\Learning\LessonController;
 use App\Http\Controllers\Learning\ProgressController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\VideoStreamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::put('locale', LocaleController::class)->middleware('throttle:30,1')->name('locale.update');
+
+Route::get('sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('robots.txt', [SeoController::class, 'robots'])->name('robots');
 
 Route::get('lessons', CatalogController::class)->name('lessons.index');
 Route::get('lessons/{lesson:slug}', [LessonController::class, 'show'])->name('lessons.show');

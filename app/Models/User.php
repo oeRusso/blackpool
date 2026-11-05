@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PermissionName;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $locale
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -30,12 +32,19 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'locale'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'locale' => null,
+    ];
 
     /**
      * @return HasMany<Lesson, $this>
@@ -59,6 +68,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function quizAttempts(): HasMany
     {
         return $this->hasMany(QuizAttempt::class);
+    }
+
+    /**
+     * Notifications and mails (verification, password reset) use the language
+     * the user picked in the interface.
+     */
+    public function preferredLocale(): ?string
+    {
+        return $this->locale;
     }
 
     public function isStaff(): bool
