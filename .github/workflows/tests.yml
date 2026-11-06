@@ -56,6 +56,9 @@ jobs:
         run: npm run types:check
       - name: Vitest
         run: npm run test
+        env:
+          # Vitest boots Vite in dev mode; laravel-vite-plugin refuses that when CI=true.
+          LARAVEL_BYPASS_ENV_CHECK: 1
 
   tests:
     name: Pest (feature, arch, coverage ≥ 90%)
