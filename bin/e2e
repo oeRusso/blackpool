@@ -23,19 +23,11 @@ cleanup() { docker rm -f "$SERVER" "$WORKER" "$SSR" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 cleanup
 
-# Dedicated environment so the dev database is never touched.
-if [ ! -f .env.e2e ]; then
-  cp .env.example .env.e2e
-  sed -i "s#^APP_URL=.*#APP_URL=http://127.0.0.1:${PORT}#" .env.e2e
-  sed -i "s#^DB_CONNECTION=.*#DB_CONNECTION=sqlite\nDB_DATABASE=/data/e2e.sqlite#" .env.e2e
-  sed -i "s#^MAIL_MAILER=.*#MAIL_MAILER=log#" .env.e2e
-  bin/d php artisan key:generate --env=e2e --force -q
-fi
-grep -q '^MEDIA_CHUNK_SIZE=' .env.e2e || echo 'MEDIA_CHUNK_SIZE=1048576' >> .env.e2e
-grep -q '^MEDIA_ROOT=' .env.e2e || echo 'MEDIA_ROOT=/data/e2e-media' >> .env.e2e
-grep -q '^DEMO_MODE=' .env.e2e && sed -i 's/^DEMO_MODE=.*/DEMO_MODE=true/' .env.e2e || echo 'DEMO_MODE=true' >> .env.e2e
-# Fail loudly if a page cannot be server-rendered instead of silently falling back.
-grep -q '^INERTIA_SSR_THROW_ON_ERROR=' .env.e2e || echo 'INERTIA_SSR_THROW_ON_ERROR=true' >> .env.e2e
+# Dedicated local environment (gitignored) so the dev database is never touched.
+# SSR errors fail loudly instead of silently falling back to client rendering.
+bin/make-env .env.e2e APP_ENV=e2e "APP_URL=http://127.0.0.1:${PORT}" \
+  DB_DATABASE=/data/e2e.sqlite MEDIA_ROOT=/data/e2e-media MEDIA_CHUNK_SIZE=1048576 \
+  MAIL_MAILER=log DEMO_MODE=true INERTIA_SSR_THROW_ON_ERROR=true
 
 # Small sample video used by the upload spec (generated once with ffmpeg).
 [ -f e2e/fixtures/sample.mp4 ] || bin/d ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=duration=6:size=1280x720:rate=25 \

@@ -13,7 +13,7 @@ Schedule::call(fn () => app(ChunkedUploadManager::class)->prune())
     ->daily()
     ->name('prune-abandoned-video-uploads');
 
-// Off-site backups (database dump + uploaded files), see docs/DEPLOYMENT.md.
+// Nightly backups on the VPS (database dump + uploaded files), see docs/DEPLOYMENT.md.
 Schedule::command('backup:clean')->daily()->at('01:00')->onOneServer();
 Schedule::command('backup:run')->daily()->at('01:30')->onOneServer();
 Schedule::command('backup:monitor')->daily()->at('09:00');

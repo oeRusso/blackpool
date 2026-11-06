@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [Unreleased]
+
+### Changed
+
+- No environment files in the repository, not even templates. `bin/make-env` generates the local, e2e and CI ones; the production `.env` lives only on the server.
+- Backups stay on the VPS with rotation and a 1.5 GB cap, instead of an external bucket. Dropped `league/flysystem-aws-s3-v3`.
+- The deployment guide only uses Cloudflare Free-plan features and a one-level subdomain.
+
 ## [2.1.0] — 2026-11-05
 
 ### Added

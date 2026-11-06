@@ -11,7 +11,7 @@ The app needs PHP-FPM, a long-running queue worker with ffmpeg, a scheduler, MyS
 - A multi-stage Dockerfile builds one PHP image (app, worker and scheduler roles) and an Nginx image with the compiled assets.
 - `compose.production.yaml` runs everything on a Contabo VPS. Cloudflare provides DNS, TLS (Full strict with an Origin Certificate), WAF and caching.
 - GitHub Actions deploys over SSH after CI passes (`bin/deploy`).
-- Nightly backups go to Backblaze B2, and Laravel Pulse provides monitoring.
+- Nightly backups rotate on the VPS itself (no external service), and Laravel Pulse provides monitoring.
 - The production stack is validated before release by running the Playwright suite against it locally.
 
 ## Consequences

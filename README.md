@@ -73,7 +73,7 @@
 | Media    | ffmpeg/ffprobe (HLS transcoding), GD (WebP covers), chunked uploads                                                       |
 | Data     | MySQL 8.4 (production), SQLite (dev/tests), Redis (cache, sessions, queues)                                               |
 | Quality  | **Pest 5** (feature + architecture), **Larastan level 7**, Pint, **Vitest**, **Playwright** + axe-core, Vite+ lint/format |
-| Ops      | Docker (multi-stage), Nginx (X-Accel-Redirect), GitHub Actions CI/CD, Cloudflare, Backblaze B2 backups                    |
+| Ops      | Docker (multi-stage), Nginx (X-Accel-Redirect), GitHub Actions CI/CD, Cloudflare (free plan), nightly backups             |
 
 Everything is free or open source; the only paid items are the VPS and the domain.
 
@@ -143,10 +143,9 @@ PHP is not required on the host: every PHP and Node command runs in a small dev 
 ```bash
 git clone https://github.com/<your-user>/blackpool.git && cd blackpool
 docker build -t blackpool-dev docker/dev          # one-off: dev toolchain image
-cp .env.example .env
+bin/make-env                                       # local .env (never committed), SQLite + generated APP_KEY
 bin/d composer install
 bin/d npm install
-bin/d php artisan key:generate
 bin/d php artisan migrate --seed                   # CEFR levels, roles, 31 lessons, quizzes, demo users
 bin/d npm run build
 docker run --rm -it -p 8000:8000 -u "$(id -u):$(id -g)" -v "$PWD":/app -v blackpool-data:/data -w /app \
@@ -204,7 +203,7 @@ Production runs on a single VPS with `compose.production.yaml`:
 - **scheduler**;
 - **MySQL 8.4** and **Redis 7**.
 
-GitHub Actions deploys `main` over SSH after CI passes. Backups (MySQL dump + uploads) go to Backblaze B2 every night.
+GitHub Actions deploys `main` over SSH after CI passes. Backups (MySQL dump + uploads) run every night and rotate on the VPS itself. No `.env` file is ever committed: local ones come from `bin/make-env`, and the production one is written on the server.
 
 The whole production stack was validated locally by running the Playwright suite against it. See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the Contabo + Cloudflare (Full strict) guide.
 

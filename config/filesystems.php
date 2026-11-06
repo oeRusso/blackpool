@@ -62,19 +62,6 @@ return [
             'report' => false,
         ],
 
-        // Off-site backups on Backblaze B2 (S3-compatible, 10 GB free).
-        'backups' => [
-            'driver' => 's3',
-            'key' => env('BACKUP_S3_KEY'),
-            'secret' => env('BACKUP_S3_SECRET'),
-            'region' => env('BACKUP_S3_REGION', 'eu-central-003'),
-            'bucket' => env('BACKUP_S3_BUCKET'),
-            'endpoint' => env('BACKUP_S3_ENDPOINT', 'https://s3.eu-central-003.backblazeb2.com'),
-            'use_path_style_endpoint' => true,
-            'throw' => true,
-            'report' => true,
-        ],
-
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -16,7 +16,5 @@ bootstrap/cache/*.php
 e2e-report
 e2e-results
 e2e/.auth
-.env
-.env.*
-!.env.example
+.env*
 docs

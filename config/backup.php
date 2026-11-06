@@ -164,6 +164,8 @@ return [
             /*
              * The disk names on which the backups will be stored.
              */
+            // Kept on the VPS itself (storage/app/private/<APP_NAME>): no external
+            // service and no cost. Copy them off the server with scp/rsync if needed.
             'disks' => [
                 env('BACKUP_DISK', 'local'),
             ],
@@ -301,7 +303,7 @@ return [
             'disks' => [env('BACKUP_DISK', 'local')],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,
-                MaximumStorageInMegabytes::class => 5000,
+                MaximumStorageInMegabytes::class => 2000,
             ],
         ],
 
@@ -366,7 +368,7 @@ return [
              * this amount of megabytes has been reached.
              * Set null for unlimited size.
              */
-            'delete_oldest_backups_when_using_more_megabytes_than' => 5000,
+            'delete_oldest_backups_when_using_more_megabytes_than' => 1500,
         ],
 
         /*

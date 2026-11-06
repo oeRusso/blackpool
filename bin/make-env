@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Creates or updates a LOCAL environment file for development, e2e or CI.
+# It holds no secrets: the APP_KEY is generated on the spot and everything else
+# is a safe local default. No .env file (or template) is ever committed, and the
+# production .env is written by hand on the server (see docs/DEPLOYMENT.md).
+#
+#   bin/make-env                      # .env for local development (SQLite)
+#   bin/make-env .env.e2e APP_ENV=e2e APP_URL=http://127.0.0.1:8010 ...
+#
+# Existing files keep their APP_KEY; KEY=VALUE arguments are set or replaced.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+FILE="${1:-.env}"
+shift || true
+
+if [ ! -f "$FILE" ]; then
+  cat > "$FILE" <<EOF
+APP_NAME=BlackPool
+APP_ENV=local
+APP_KEY=base64:$(openssl rand -base64 32)
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+VITE_APP_NAME=BlackPool
+
+DB_CONNECTION=sqlite
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+MAIL_MAILER=log
+LOG_LEVEL=debug
+DEMO_MODE=false
+EOF
+  chmod 600 "$FILE"
+  echo "Created $FILE"
+fi
+
+for pair in "$@"; do
+  key="${pair%%=*}"
+  value="${pair#*=}"
+  if grep -q "^${key}=" "$FILE"; then
+    # Replace in place without sed (values may contain / or &).
+    awk -v k="$key" -v v="$value" 'BEGIN { FS = OFS = "=" } $1 == k { print k "=" v; next } { print }' "$FILE" > "$FILE.tmp" && cat "$FILE.tmp" > "$FILE" && rm "$FILE.tmp"
+  else
+    echo "${key}=${value}" >> "$FILE"
+  fi
+done

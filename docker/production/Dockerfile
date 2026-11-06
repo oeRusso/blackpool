@@ -26,10 +26,9 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-audit --no-fund
 COPY . .
+# No .env in the image: a throwaway key is enough to boot artisan for Wayfinder.
 RUN composer dump-autoload --no-dev --no-interaction \
-    && cp .env.example .env && php artisan key:generate --force \
-    && npm run build \
-    && rm .env
+    && APP_KEY="base64:$(head -c 32 /dev/urandom | base64)" npm run build
 # ^ builds the client assets (public/build) and the self-contained SSR bundle
 #   (bootstrap/ssr), which the `ssr` stage below runs without node_modules.
 

@@ -16,6 +16,6 @@ Lessons need video. The constraints are free tools only, a single VPS, and Cloud
 
 ## Consequences
 
-- Works on one VPS with no paid services. Storage can move to Backblaze B2 later.
+- Works on one VPS with no paid services. Storage could move to object storage later if needed.
 - Per-segment authorization costs one cheap request to PHP per segment, which is acceptable at this scale.
 - Queue `retry_after` must stay above the job timeout. A test guards this, because a lower value would let two workers transcode the same video.

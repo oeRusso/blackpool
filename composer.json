@@ -17,7 +17,6 @@
         "laravel/pulse": "^1.8",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "league/flysystem-aws-s3-v3": "^3.35",
         "spatie/laravel-backup": "^10.3",
         "spatie/laravel-permission": "^8.3"
     },
@@ -49,8 +48,7 @@
     "scripts": {
         "setup": [
             "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
+            "bash bin/make-env .env",
             "@php artisan migrate --force",
             "npm install",
             "npm run build"
@@ -86,9 +84,6 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
