@@ -73,7 +73,7 @@
 | Media    | ffmpeg/ffprobe (HLS transcoding), GD (WebP covers), chunked uploads                                                       |
 | Data     | MySQL 8.4 (production), SQLite (dev/tests), Redis (cache, sessions, queues)                                               |
 | Quality  | **Pest 5** (feature + architecture), **Larastan level 7**, Pint, **Vitest**, **Playwright** + axe-core, Vite+ lint/format |
-| Ops      | Docker (multi-stage), Nginx (X-Accel-Redirect), GitHub Actions CI/CD, Cloudflare (free plan), nightly backups             |
+| Ops      | Docker (multi-stage), Nginx (X-Accel-Redirect), GitHub Actions CI, Cloudflare Tunnel (free plan), nightly backups         |
 
 Everything is free or open source; the only paid items are the VPS and the domain.
 
@@ -194,18 +194,19 @@ It also captures the screenshots above (`SCREENSHOTS=1 bin/e2e e2e/ui.spec.ts --
 
 ## Deployment
 
-Production runs on a single VPS with `compose.production.yaml`:
+Production runs on a shared VPS with `compose.yaml`, reached through a Cloudflare Tunnel (no open ports):
 
-- **web**: Nginx with X-Accel-Redirect and Cloudflare real IPs;
+- **tunnel**: `cloudflared`, an outbound connection to Cloudflare, which terminates HTTPS;
+- **web**: Nginx with X-Accel-Redirect and the visitor's real IP;
 - **app**: php-fpm with OPcache JIT;
 - **ssr**: Node server that pre-renders public pages;
 - **worker**: queue worker with ffmpeg;
 - **scheduler**;
 - **MySQL 8.4** and **Redis 7**.
 
-GitHub Actions deploys `main` over SSH after CI passes. Backups (MySQL dump + uploads) run every night and rotate on the VPS itself. No `.env` file is ever committed: local ones come from `bin/make-env`, and the production one is written on the server.
+GitHub Actions runs the checks; `main` is deployed by hand on the VPS with `bin/deploy`. Backups (MySQL dump + uploads) run every night and rotate on the VPS itself. No `.env` file is ever committed: local ones come from `bin/make-env`, and the production one is written on the server.
 
-The whole production stack was validated locally by running the Playwright suite against it. See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the Contabo + Cloudflare (Full strict) guide.
+The whole production stack was validated locally by running the Playwright suite against it. See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the Contabo + Cloudflare Tunnel guide.
 
 ## Project structure
 

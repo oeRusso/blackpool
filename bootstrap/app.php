@@ -24,8 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // `locale` stays readable outside the web middleware (e.g. branded 404 pages).
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'locale']);
 
-        // Nginx runs on the private Docker network in front of PHP-FPM and restores
-        // the visitor IP from Cloudflare's CF-Connecting-IP header.
+        // Only the cloudflared container reaches Nginx. Nginx restores the visitor IP
+        // from CF-Connecting-IP and passes the original scheme to PHP as HTTPS, so
+        // X-Forwarded-* headers are only trusted from private addresses (local runs).
         $middleware->trustProxies(at: ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']);
 
         $middleware->web(append: [

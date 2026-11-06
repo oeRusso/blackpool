@@ -59,7 +59,7 @@ CMD ["node", "bootstrap/ssr/app.js"]
 # ---- Nginx -----------------------------------------------------------------
 FROM nginx:1.27-alpine AS web
 COPY --from=app /var/www/html/public /var/www/html/public
-COPY docker/production/nginx/cloudflare.conf /etc/nginx/snippets/cloudflare.conf
+COPY docker/production/nginx/realip.conf /etc/nginx/snippets/realip.conf
 COPY docker/production/nginx/app.conf /etc/nginx/snippets/app.conf
 COPY docker/production/nginx/default.conf /etc/nginx/conf.d/default.conf
 RUN ln -s /var/www/html/storage/app/public /var/www/html/public/storage

@@ -10,7 +10,17 @@ All notable changes to this project are documented here. The format follows
 
 - No environment files in the repository, not even templates. `bin/make-env` generates the local, e2e and CI ones; the production `.env` lives only on the server.
 - Backups stay on the VPS with rotation and a 1.5 GB cap, instead of an external bucket. Dropped `league/flysystem-aws-s3-v3`.
-- The deployment guide only uses Cloudflare Free-plan features and a one-level subdomain.
+- Production now runs on the shared VPS behind the project's own Cloudflare Tunnel, at `https://blackpool.esteban-russo.com`:
+    - `compose.production.yaml` became `compose.yaml` (`name: blackpool`), with no published ports, no origin certificates and a `tunnel` service;
+    - Nginx restores the visitor IP from `CF-Connecting-IP` and passes the original scheme from `X-Forwarded-Proto`;
+    - memory limits on every service, a leaner MySQL (no Performance Schema), smaller PHP-FPM pool, and ffmpeg capped at two cores.
+- `compose.prodtest.yaml` runs the production stack locally on `127.0.0.1:8020` for the Playwright suite.
+- `bin/deploy` runs by hand on the VPS (`git pull --ff-only`).
+
+### Removed
+
+- The SSH deploy workflow (`.github/workflows/deploy.yml`): no external service holds a key to the VPS.
+- `docker/production/update-cloudflare-ips.sh`, the HTTPS Nginx server block and the local-only Nginx config.
 
 ## [2.1.0] — 2026-11-05
 

@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
-# Server-side deploy: pull the latest main, rebuild the images and restart the stack.
-# Migrations run when the `app` container starts (RUN_MIGRATIONS=true).
+# Runs ON THE VPS, by hand, from ~/blackpool: updates to the latest main and
+# restarts the stack. Migrations run when the `app` container starts.
+# Nothing deploys automatically and no CI service holds an SSH key to the VPS.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-COMPOSE="docker compose -f compose.production.yaml"
-
-git fetch --quiet origin main
-git reset --hard origin/main
+git pull --ff-only origin main
 
 export IMAGE_TAG="$(git rev-parse --short HEAD)"
-$COMPOSE build --pull
-$COMPOSE up -d --remove-orphans --wait
+docker compose up -d --build --remove-orphans --wait
 
-# Make long-running workers pick up the new code and clear stale caches.
-$COMPOSE exec -T app php artisan queue:restart
-$COMPOSE exec -T app php artisan pulse:restart || true
+# Make long-running workers pick up the new code.
+docker compose exec -T app php artisan queue:restart
+docker compose exec -T app php artisan pulse:restart || true
 
 docker image prune -f >/dev/null
 echo "Deployed ${IMAGE_TAG}"
