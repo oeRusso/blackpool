@@ -41,6 +41,9 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: npm ci
       - run: bin/make-env .env
+      # Wayfinder reads column types from the database (integer route keys), so
+      # generate against a migrated SQLite database, as in development.
+      - run: touch database/database.sqlite && php artisan migrate --force --no-interaction
       - run: php artisan wayfinder:generate --with-form
 
       - name: Pint (code style)
