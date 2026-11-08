@@ -1,0 +1,177 @@
+# Production stack for the shared VPS (see docs/DEPLOYMENT.md).
+#   cd ~/blackpool && docker compose up -d --build --wait
+#
+# No port is published to the internet: traffic arrives through the project's
+# own Cloudflare Tunnel (`tunnel` service, outbound connection only), which
+# routes https://blackpool.esteban-russo.com to http://web:80. Cloudflare
+# terminates HTTPS. Every service has a memory limit because the VPS is shared.
+name: blackpool
+
+x-app: &app
+    image: blackpool-app:${IMAGE_TAG:-latest}
+    build:
+        context: .
+        dockerfile: docker/production/Dockerfile
+        target: app
+    env_file: ${APP_ENV_FILE:-.env}
+    restart: unless-stopped
+    volumes:
+        - storage:/var/www/html/storage
+    depends_on:
+        mysql:
+            condition: service_healthy
+        redis:
+            condition: service_healthy
+
+services:
+    web:
+        image: blackpool-web:${IMAGE_TAG:-latest}
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+            target: web
+        restart: unless-stopped
+        mem_limit: 128m
+        volumes:
+            - storage:/var/www/html/storage:ro
+        depends_on:
+            - app
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'wget',
+                    '-qO-',
+                    '--header',
+                    'Host: localhost',
+                    'http://127.0.0.1/up',
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+
+    tunnel:
+        image: cloudflare/cloudflared:latest
+        restart: unless-stopped
+        command: tunnel --no-autoupdate run
+        mem_limit: 128m
+        environment:
+            TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Definí TUNNEL_TOKEN en .env}
+        depends_on:
+            web:
+                condition: service_healthy
+
+    app:
+        <<: *app
+        mem_limit: 512m
+        environment:
+            CONTAINER_ROLE: app
+            RUN_MIGRATIONS: 'true'
+        healthcheck:
+            test: ['CMD-SHELL', 'php-fpm -t >/dev/null 2>&1']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+
+    # One worker process = one transcode at a time. ffmpeg is capped at two of
+    # the VPS's four cores so the other projects stay responsive.
+    worker:
+        <<: *app
+        mem_limit: 1g
+        cpus: 2
+        environment:
+            CONTAINER_ROLE: worker
+            FFMPEG_THREADS: '2'
+        command:
+            [
+                'php',
+                'artisan',
+                'queue:work',
+                '--queue=media,default',
+                '--tries=2',
+                '--timeout=3600',
+                '--sleep=3',
+                '--max-time=3600',
+            ]
+        stop_grace_period: 60s
+
+    scheduler:
+        <<: *app
+        mem_limit: 256m
+        environment:
+            CONTAINER_ROLE: scheduler
+        command: ['php', 'artisan', 'schedule:work']
+
+    # Pre-renders public pages for SEO. Only reachable on the internal network
+    # (it also exposes /shutdown); if it is down, pages render client-side.
+    ssr:
+        image: blackpool-ssr:${IMAGE_TAG:-latest}
+        build:
+            context: .
+            dockerfile: docker/production/Dockerfile
+            target: ssr
+        restart: unless-stopped
+        mem_limit: 256m
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:13714/health']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+
+    # The project's own MySQL, with no published port (the VPS's 3306 belongs
+    # to the portfolio). Performance Schema is off to save ~300 MB of RAM.
+    mysql:
+        image: mysql:8.4
+        restart: unless-stopped
+        mem_limit: 640m
+        command:
+            [
+                '--performance-schema=OFF',
+                '--innodb-buffer-pool-size=192M',
+                '--max-connections=50',
+            ]
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        volumes:
+            - mysql:/var/lib/mysql
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        mem_limit: 128m
+        command:
+            [
+                'redis-server',
+                '--appendonly',
+                'yes',
+                '--maxmemory',
+                '96mb',
+                '--maxmemory-policy',
+                'noeviction',
+            ]
+        volumes:
+            - redis:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            timeout: 3s
+            retries: 10
+
+volumes:
+    storage:
+    mysql:
+    redis:

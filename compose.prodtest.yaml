@@ -1,0 +1,11 @@
+# Local smoke test of the production stack, without the tunnel (never used on the VPS).
+#   docker compose -p blackpool-prodtest --env-file .env.prodtest \
+#       -f compose.yaml -f compose.prodtest.yaml up -d --build --wait
+# Nginx is published on 127.0.0.1 only. See docs/DEPLOYMENT.md, section 7.
+services:
+    web:
+        ports:
+            - '127.0.0.1:${HTTP_PORT:-8020}:80'
+
+    tunnel:
+        profiles: ['tunnel']

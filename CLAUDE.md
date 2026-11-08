@@ -4,56 +4,83 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-BlackPool is an English-learning platform (CEFR levels A1–C2) built as a portfolio project. It is being refactored according to the phased plan in `docs/ROADMAP.md`. **Read it before making structural changes.** The current code is the *legacy baseline* (git tag `legacy-baseline`).
+BlackPool is an English-learning platform built as a portfolio project:
 
-Constraint: only free / open-source tools and services. Target deployment is a Contabo VPS behind Cloudflare (free plan, so request bodies are capped at 100 MB and large uploads must be chunked).
+- lessons by CEFR level (A1–C2) with HLS video, PDF worksheets, quizzes and progress tracking;
+- an admin backoffice.
 
-## Stack (current → target)
+`README.md` is the overview, `docs/adr/` explains the key decisions and `docs/DEPLOYMENT.md` covers production. The pre-refactor prototype lives under the git tag `legacy-baseline`.
 
-| Layer | Current (legacy) | Target (Phase 1) |
-|---|---|---|
-| Backend | Laravel 11, Jetstream 5 (Fortify), Sanctum | Laravel 13 + Vue starter kit (Fortify) |
-| Frontend | Inertia 1, Vue 3.5 (JS, Options+`<script setup>` mix), Ziggy | Inertia 3, Vue 3.5 + TypeScript, shadcn-vue |
-| CSS | Tailwind 3 | Tailwind 4 |
-| AuthZ | spatie/laravel-permission 6 | same + Policies |
-| Tests | PHPUnit 11 (Jetstream defaults only) | Pest 4, Larastan, Vitest, Playwright |
+**Constraint:** only free or open-source tools. Production is a shared Contabo VPS reached through a Cloudflare Tunnel (free plan), which caps request bodies at 100 MB, so large uploads must be chunked. Read the deployment rules below before touching infrastructure.
 
 ## Commands
 
-PHP is **not** installed on the host; run PHP tooling through Docker (Laravel Sail once added, or `docker run --rm -v "$PWD":/app -w /app composer:2 ...`). Node 24 and ffmpeg are available on the host.
+PHP is **not** installed on the host. Run PHP and Node tooling through the dev image with `bin/d`. Build the image once with `docker build -t blackpool-dev docker/dev`. The dev SQLite database lives in the `blackpool-data` Docker volume (`/data/database.sqlite`).
 
 ```bash
-npm run dev            # Vite dev server
-npm run build          # production assets → public/build
-composer dev           # serve + queue:listen + pail + vite (inside PHP env)
-php artisan test       # all tests
-php artisan test --filter=SomeTest   # single test
-php artisan migrate:fresh --seed     # seeds levels A1–C2, roles and demo users
-./vendor/bin/pint      # code style
+bin/d php artisan test                         # Pest (Feature/Domain, Arch, kit tests)
+bin/d php artisan test --filter=VideoTest      # single file / test name
+bin/d php artisan test --coverage --min=90     # CI gate
+bin/d ./vendor/bin/phpstan analyse --memory-limit=1G   # Larastan level 7
+bin/d ./vendor/bin/pint                        # PHP code style
+bin/d npm run check:fix                        # Vite+ format + lint (run after editing .vue/.ts)
+bin/d npm run types:check                      # vue-tsc
+bin/d npm run test                             # Vitest (*.test.ts next to the code)
+bin/d npm run build                            # also regenerates Wayfinder routes
+bin/d php artisan wayfinder:generate --with-form   # after adding/changing routes
+bin/make-env                                   # local .env (gitignored) with a generated APP_KEY
+bin/d php artisan migrate:fresh --seed         # demo data (idempotent seeders)
+bin/e2e                                        # Playwright: seeds an e2e DB, starts server + queue worker
+bin/e2e e2e/video.spec.ts --grep upload        # subset
+E2E_SKIP_BUILD=1 bin/e2e                       # skip the asset build
+E2E_BASE_URL=http://127.0.0.1:8020 bin/e2e     # against an already running stack
 ```
 
-## Architecture & domain
+Playwright runs in the official `mcr.microsoft.com/playwright` image. Use the same version as `@playwright/test`. Test ids use the `data-test` attribute.
 
-- **Models** (`app/Models`): `Category` ⇄ `Lesson` (many-to-many via `category_lesson`), `Lesson` → `Level` (belongs to, FK `level_id`), `User` (uses `HasRoles`).
-- **Roles/permissions** (`database/seeders/RoleSeeder.php`): `admin` = CRUD on roles, lessons and categories; `editor` = CRUD on lessons and categories. Permission names follow `"<verb> <resource>"`, e.g. `create lessons`.
-- Permissions reach the frontend through `HandleInertiaRequests::share()` as `user.roles` / `user.permissions`. Vue pages use them only to hide UI.
-- Routes (`routes/web.php`): `/` is public. `dashboard` and the resource routes `categories`, `lessons` and `roles` sit behind `auth:sanctum` + `verified`.
-- Inertia page names may use dots (`'Lessons.Index'`). `resources/js/app.js` converts them to paths.
+## Architecture
 
-## Known issues in the legacy baseline (fix, don't copy)
-
-- **Authorization is not enforced on the server.** There are no policies or `can` middleware, and `CategoryRequest::authorize()` returns `true`. Any registered user can call the CRUD endpoints directly. Always add Policies or FormRequest authorization for new endpoints.
-- `LessonController` (except `index`/`create`) and `RoleController` are empty stubs. `Lessons/Edit.vue` is a copy of the category page.
-- `Lesson::levels()` is wrongly `belongsToMany`; the schema is `belongsTo`.
-- `category_lesson` has no FKs or unique constraint.
-- The `level_id` FK cascades deletes to lessons.
-- `phpunit.xml` does not force SQLite, so tests would run against the `.env` database.
-- `resources/views/app.blade.php` links a hashed CSS file, and `vite.config.js` hard-codes `base: '/projects/blackpool/'`.
+- **Roles and permissions:** `app/Enums/RoleName.php` and `PermissionName.php` define them, `RolesAndPermissionsSeeder` seeds them (spatie/laravel-permission).
+    - Roles are `admin`, `editor`, `premium` and `student`. Self-registered users get `student`.
+- **Authorization is always server-side.**
+    - The `/admin` prefix uses `can:access-admin` (`routes/admin.php`). Every action then authorizes through a Policy (`app/Policies`) or `FormRequest::authorize()`.
+    - `LessonPolicy::view` covers lesson metadata (published, or staff). `LessonPolicy::watch` covers the video, PDF, quiz and progress (free lessons need an account, premium lessons need `view premium lessons`).
+    - `HandleInertiaRequests` shares `auth.can`, a server-computed ability map that the UI uses only to show or hide controls.
+- **Domain logic:** controllers stay thin and logic lives in `app/Actions` (`SaveLesson`, `GradeQuiz`, `UpdateLessonProgress`) and `app/Services/Video`.
+- **Video:** browser → `ChunkedUploadManager` (raw `PUT` chunks) → `ProcessUploadedVideo` job on the `media` queue (`HlsTranscoder`: ffprobe, thumbnail, HLS 360p/720p) → `VideoStreamController`, which authorizes every segment and uses `X-Accel-Redirect` when `MEDIA_ACCEL_REDIRECT_PREFIX` is set. Embeds go through `EmbedResolver` (oEmbed).
+- **Frontend:** Inertia pages live in `resources/js/pages` (`learn/*`, `admin/*`, `auth/*`, `settings/*`). The layout is chosen in `resources/js/app.ts`: `learn/`, `Welcome` and `Error` use `PublicLayout`. Routes are typed with Wayfinder: `@/routes/...` and `@/actions/...`. The generated files are gitignored.
+- **i18n and SSR:**
+    - UI strings are English keys translated with `useI18n().t()` (`resources/js/lib/i18n.ts`) on the frontend and `__()` on the backend.
+    - Spanish lives in `lang/es.json`. Tests fail if a key is missing, so add the translation with every new string.
+    - `SetLocale` resolves the language from the account, then the cookie, then `Accept-Language`.
+    - Public pages are server-rendered by the Node SSR bundle (`bootstrap/ssr/app.js`, built by `npm run build`). Code that runs during render must not touch `window` or `document`, and must not depend on the timezone.
+- **Security:** `SecurityHeaders` sets a nonce-based CSP; inline scripts need `nonce="{{ Vite::cspNonce() }}"`, and new third-party origins must be added to the policy. With `DEMO_MODE=true`, `ProtectDemoAccounts` stops the shared demo accounts from changing their credentials, and `demo:reset` runs nightly.
 
 ## Conventions
 
-- Thin controllers. Business logic goes in `app/Actions/*`, validation and authorization in FormRequests, access rules in Policies.
-- Use PHP enums for statuses, roles and permissions.
-- Every business rule gets a feature test, including authorization tests per role.
-- Conventional Commits; one branch/PR per roadmap phase.
-- Never commit `.env`, and never publish real credentials in the README.
+- Every business rule gets a Pest test in `tests/Feature/Domain`, including authorization per role. Use the helper `userWithRole(RoleName::X)` from `tests/Pest.php`. User-visible flows also get a Playwright spec.
+- `tests/Arch/ArchitectureTest.php` enforces the architecture:
+    - no debug calls;
+    - `env()` only in `config/`;
+    - string-backed enums;
+    - queued jobs;
+    - suffixed controllers, requests and policies.
+- Models use the `#[Fillable]` attribute and `CarbonInterface` in docblocks (dates are `CarbonImmutable`). `Model::shouldBeStrict()` is on outside production.
+- Seeders must be idempotent and must not use factories, because production images have no Faker.
+- Keep `queue.*.retry_after` above `ProcessUploadedVideo::$timeout`; a test guards this.
+- Use Conventional Commits, and keep CI green: Pint, Larastan, `vp check`, vue-tsc, Vitest, Pest with ≥ 90% coverage, and Playwright.
+- Never commit `.env*` files, not even templates. Local ones are generated by `bin/make-env`; the production `.env` exists only on the VPS (`docs/DEPLOYMENT.md`).
+
+## Deployment rules (non-negotiable)
+
+These come from Esteban and from the shared-VPS guide (`../PORTAFOLIO2.0/docs/VPS-COMPARTIDO.md`); read that guide before deploying.
+
+- **No third-party services, SaaS or external APIs without asking Esteban first.** Everything runs on this VPS, in containers: database, Redis, queue, SSR, ffmpeg, backups. No managed databases, email, monitoring, storage or CDN providers. The existing exceptions are the GitHub repository with its Actions CI (tests only) and the optional YouTube/Vimeo embeds that an editor pastes.
+- **Zero extra cost.** Only the Contabo VPS and Cloudflare's free plan, with no add-ons on either (backups, snapshots, IPs, Advanced Certificate Manager, Argo, Images, Stream…).
+- **No Cloudflare resources beyond DNS.** Traffic enters through the project's own Cloudflare Tunnel, which Esteban creates; its route creates the DNS record. Do not create certificates, WAF, cache or page rules, Workers or anything else.
+- **No ports open to the internet.** `compose.yaml` publishes nothing (Docker bypasses `ufw`). If a port is ever needed for administration, bind it to `127.0.0.1` and avoid the ones already taken on the VPS (`3306`).
+- **Secrets stay out of git and the chat.** The agent generates passwords on the VPS (`openssl rand`) without printing them; Esteban pastes the tunnel token.
+- **Esteban runs `sudo`.** Give Esteban the exact command.
+- **Only `main` is deployed.** Work on `development`, open a PR, and let Esteban merge. Never merge, force-push `main` or change repository visibility.
+- **The VPS is shared** with the portfolio and other projects: every service needs a `mem_limit`, check `free -h` before heavy work, and keep ~1 GB free.
+- Address: `https://blackpool.esteban-russo.com`, tunnel `blackpool`, route `http://web:80`, folder `~/blackpool`. Access: `ssh -o BatchMode=yes esteban@164.68.121.27 '<command>'`.
